@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:intl/intl.dart';
 import '../../../core/themes/app_colors.dart';
+import '../../../core/utils/surgery_image_helper.dart';
 import '../cases/case_detail_screen.dart';
+import '../../widgets/marquee_text.dart';
 
-/// Sort Surgeries Screen - Flutter equivalent of sortSurgeriesVController
-/// Allows filtering past surgeries by surgery type and surgeon
+/// Sort Surgeries Screen - Search past surgeries across all fields
+/// Allows searching by surgeon, facility, surgery class, or surgery type
 class SortSurgeriesScreen extends ConsumerStatefulWidget {
   const SortSurgeriesScreen({super.key});
 
@@ -14,20 +17,23 @@ class SortSurgeriesScreen extends ConsumerStatefulWidget {
 }
 
 class _SortSurgeriesScreenState extends ConsumerState<SortSurgeriesScreen> {
-  bool _surgeryChecked = false;
-  bool _surgeonChecked = false;
-  String? _selectedSurgery;
-  String? _selectedSurgeon;
-  List<String> _availableSurgeries = [];
-  List<String> _availableSurgeons = [];
+  final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _allCases = [];
   List<Map<String, dynamic>> _filteredCases = [];
   bool _isLoading = false;
+  final DateFormat _dateFormat = DateFormat('M/d/yyyy');
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _searchController.addListener(_filterCases);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -39,14 +45,13 @@ class _SortSurgeriesScreenState extends ConsumerState<SortSurgeriesScreen> {
       // Fetch all cases for current user
       final query = QueryBuilder<ParseObject>(ParseObject('jclCases'))
         ..whereEqualTo('userEmail', currentUser.emailAddress)
+        ..orderByDescending('dateTime')
         ..setLimit(10000);
 
       final response = await query.query();
 
       if (response.success && response.results != null) {
         final cases = <Map<String, dynamic>>[];
-        final surgeries = <String>{};
-        final surgeons = <String>{};
 
         for (var obj in response.results!) {
           final caseObj = obj as ParseObject;
@@ -63,26 +68,15 @@ class _SortSurgeriesScreenState extends ConsumerState<SortSurgeriesScreen> {
             'skillsArry': caseObj.get<List>('skilledProcsArray') ?? [],
             'jclImageName': caseObj.get<String>('jclImageName') ?? '',
             'dateTime': caseObj.get<DateTime>('dateTime'),
+            'procSurgery': caseObj.get<String>('procSurgery') ?? caseObj.get<String>('surgery') ?? '',
           };
 
           cases.add(caseData);
-
-          final surgeryClass = caseData['surgeryClass'] as String?;
-          final surgeonName = caseData['surgeonName'] as String?;
-
-          if (surgeryClass != null && surgeryClass.isNotEmpty) {
-            surgeries.add(surgeryClass);
-          }
-          if (surgeonName != null && surgeonName.isNotEmpty) {
-            surgeons.add(surgeonName);
-          }
         }
 
         setState(() {
           _allCases = cases;
           _filteredCases = cases;
-          _availableSurgeries = surgeries.toList()..sort();
-          _availableSurgeons = surgeons.toList()..sort();
         });
       }
     } catch (e) {
@@ -93,123 +87,52 @@ class _SortSurgeriesScreenState extends ConsumerState<SortSurgeriesScreen> {
   }
 
   void _filterCases() {
+    final searchTerm = _searchController.text.toLowerCase().trim();
+
+    if (searchTerm.isEmpty) {
+      setState(() {
+        _filteredCases = _allCases;
+      });
+      return;
+    }
+
     setState(() {
       _filteredCases = _allCases.where((caseData) {
-        bool matchesSurgery = true;
-        bool matchesSurgeon = true;
+        final surgeonName = (caseData['surgeonName'] as String? ?? '').toLowerCase();
+        final facilityName = (caseData['facilityName'] as String? ?? '').toLowerCase();
+        final surgeryClass = (caseData['surgeryClass'] as String? ?? '').toLowerCase();
+        final surgery = (caseData['surgery'] as String? ?? '').toLowerCase();
 
-        if (_surgeryChecked && _selectedSurgery != null) {
-          matchesSurgery = caseData['surgeryClass'] == _selectedSurgery;
-        }
-
-        if (_surgeonChecked && _selectedSurgeon != null) {
-          matchesSurgeon = caseData['surgeonName'] == _selectedSurgeon;
-        }
-
-        return matchesSurgery && matchesSurgeon;
+        return surgeonName.contains(searchTerm) ||
+            facilityName.contains(searchTerm) ||
+            surgeryClass.contains(searchTerm) ||
+            surgery.contains(searchTerm);
       }).toList();
+
+      // Sort by date descending (newest first)
+      _filteredCases.sort((a, b) {
+        final dateA = a['dateTime'] as DateTime?;
+        final dateB = b['dateTime'] as DateTime?;
+
+        if (dateA == null && dateB == null) return 0;
+        if (dateA == null) return 1;
+        if (dateB == null) return -1;
+
+        return dateB.compareTo(dateA);
+      });
     });
   }
 
-  void _showSurgeryPicker() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Surgery'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: ListView.builder(
-            itemCount: _availableSurgeries.length,
-            itemBuilder: (context, index) {
-              final surgery = _availableSurgeries[index];
-              return ListTile(
-                title: Text(surgery),
-                onTap: () {
-                  setState(() {
-                    _selectedSurgery = surgery;
-                    _surgeryChecked = true;
-
-                    // Filter available surgeons based on selected surgery
-                    final surgeons = _allCases
-                        .where((c) => c['surgeryClass'] == surgery)
-                        .map((c) => c['surgeonName'] as String?)
-                        .where((s) => s != null && s.isNotEmpty)
-                        .cast<String>()
-                        .toSet()
-                        .toList();
-                    _availableSurgeons = surgeons..sort();
-                  });
-                  Navigator.pop(context);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSurgeonPicker() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Surgeon'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: ListView.builder(
-            itemCount: _availableSurgeons.length,
-            itemBuilder: (context, index) {
-              final surgeon = _availableSurgeons[index];
-              return ListTile(
-                title: Text(surgeon),
-                onTap: () {
-                  setState(() {
-                    _selectedSurgeon = surgeon;
-                    _surgeonChecked = true;
-
-                    // Filter available surgeries based on selected surgeon
-                    final surgeries = _allCases
-                        .where((c) => c['surgeonName'] == surgeon)
-                        .map((c) => c['surgeryClass'] as String?)
-                        .where((s) => s != null && s.isNotEmpty)
-                        .cast<String>()
-                        .toSet()
-                        .toList();
-                    _availableSurgeries = surgeries..sort();
-                  });
-                  Navigator.pop(context);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _reset() {
+  void _clearSearch() {
+    _searchController.clear();
     setState(() {
-      _surgeryChecked = false;
-      _surgeonChecked = false;
-      _selectedSurgery = null;
-      _selectedSurgeon = null;
       _filteredCases = _allCases;
     });
-    _loadData();
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'N/A';
+    return _dateFormat.format(date);
   }
 
   @override
@@ -218,7 +141,7 @@ class _SortSurgeriesScreenState extends ConsumerState<SortSurgeriesScreen> {
       backgroundColor: AppColors.jclGray,
       appBar: AppBar(
         title: const Text(
-          'Past Surgeries',
+          'Search Past Surgeries',
           style: TextStyle(
             color: AppColors.jclWhite,
             fontSize: 18,
@@ -232,7 +155,10 @@ class _SortSurgeriesScreenState extends ConsumerState<SortSurgeriesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.jclWhite),
-            onPressed: _reset,
+            onPressed: () {
+              _clearSearch();
+              _loadData();
+            },
           ),
         ],
       ),
@@ -242,159 +168,212 @@ class _SortSurgeriesScreenState extends ConsumerState<SortSurgeriesScreen> {
             )
           : Column(
               children: [
-                // Filter section
+                // Search field section
                 Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
+                  color: AppColors.jclGray,
+                  padding: const EdgeInsets.all(16),
+                  child: TextField(
+                    controller: _searchController,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    style: const TextStyle(color: AppColors.jclGray),
+                    decoration: InputDecoration(
+                      hintText: 'Search by surgeon, facility, or surgery...',
+                      hintStyle: TextStyle(
+                        color: AppColors.jclGray.withOpacity(0.5),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.jclWhite,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.jclOrange,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(
+                                Icons.clear,
+                                color: AppColors.jclGray,
+                              ),
+                              onPressed: _clearSearch,
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                // Results count
+                Container(
+                  color: AppColors.jclGray,
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Surgery filter
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _surgeryChecked,
-                            onChanged: (value) {
-                              setState(() => _surgeryChecked = value ?? false);
-                            },
-                            fillColor: MaterialStateProperty.all(AppColors.jclOrange),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: _showSurgeryPicker,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.jclWhite,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  _selectedSurgery ?? 'Select Surgery',
-                                  style: TextStyle(
-                                    color: _selectedSurgery == null
-                                        ? AppColors.jclGray.withOpacity(0.5)
-                                        : AppColors.jclGray,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // Surgeon filter
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _surgeonChecked,
-                            onChanged: (value) {
-                              setState(() => _surgeonChecked = value ?? false);
-                            },
-                            fillColor: MaterialStateProperty.all(AppColors.jclOrange),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: _showSurgeonPicker,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.jclWhite,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  _selectedSurgeon ?? 'Select Surgeon',
-                                  style: TextStyle(
-                                    color: _selectedSurgeon == null
-                                        ? AppColors.jclGray.withOpacity(0.5)
-                                        : AppColors.jclGray,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      // Search button
-                      ElevatedButton(
-                        onPressed: _filterCases,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.jclOrange,
-                          foregroundColor: AppColors.jclGray,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Search',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      Text(
+                        '${_filteredCases.length} case${_filteredCases.length == 1 ? '' : 's'} found',
+                        style: const TextStyle(
+                          color: AppColors.jclWhite,
+                          fontSize: 14,
                         ),
                       ),
+                      if (_searchController.text.isNotEmpty)
+                        Text(
+                          'of ${_allCases.length} total',
+                          style: TextStyle(
+                            color: AppColors.jclWhite.withOpacity(0.7),
+                            fontSize: 14,
+                          ),
+                        ),
                     ],
                   ),
                 ),
                 // Results list
                 Expanded(
-                  child: Container(
-                    color: AppColors.jclWhite,
-                    child: _filteredCases.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No cases found',
-                              style: TextStyle(
-                                color: AppColors.jclGray.withOpacity(0.5),
-                                fontSize: 16,
+                  child: _filteredCases.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: AppColors.jclWhite.withOpacity(0.3),
                               ),
-                            ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(8),
-                            itemCount: _filteredCases.length,
-                            separatorBuilder: (context, index) => const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              final caseData = _filteredCases[index];
-                              return ListTile(
-                                contentPadding: const EdgeInsets.all(12),
-                                title: Text(
-                                  '${caseData['surgery']} / ASA: ${caseData['asaClass']}',
-                                  style: const TextStyle(
-                                    color: AppColors.jclGray,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _searchController.text.isEmpty
+                                    ? 'No cases found'
+                                    : 'No cases match your search',
+                                style: TextStyle(
+                                  color: AppColors.jclWhite.withOpacity(0.7),
+                                  fontSize: 16,
                                 ),
-                                subtitle: Text(
-                                  caseData['primePlan'] ?? '',
-                                  style: TextStyle(
-                                    color: AppColors.jclGray.withOpacity(0.7),
-                                  ),
-                                ),
-                                trailing: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                  color: AppColors.jclOrange,
-                                ),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => CaseDetailScreen(
-                                        caseId: caseData['caseID'] as String,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
+                              ),
+                            ],
                           ),
-                  ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(0),
+                          itemCount: _filteredCases.length,
+                          separatorBuilder: (context, index) => const Divider(
+                            height: 1,
+                            color: AppColors.jclWhite,
+                            thickness: 0.5,
+                          ),
+                          itemBuilder: (context, index) {
+                            final caseData = _filteredCases[index];
+                            final dateTime = caseData['dateTime'] as DateTime?;
+
+                            return ListTile(
+                              tileColor: AppColors.jclGray,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.jclWhite,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6.0),
+                                  child: Image.asset(
+                                    SurgeryImageHelper.getAssetPath(
+                                      caseData['jclImageName'] as String?,
+                                      surgeryClass: caseData['surgeryClass'] as String?,
+                                    ),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.medical_services,
+                                        color: AppColors.jclOrange,
+                                        size: 24,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              title: MarqueeText(
+                                caseData['procSurgery'] as String? ?? caseData['surgery'] as String? ?? 'Unknown',
+                                maxLines: 1,
+                                scrollSpeed: 30,
+                                pauseInterval: 1.5,
+                                labelSpacing: 30,
+                                style: const TextStyle(
+                                  color: AppColors.jclWhite,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  MarqueeText(
+                                    caseData['primePlan'] as String? ?? '',
+                                    maxLines: 1,
+                                    scrollSpeed: 24,
+                                    pauseInterval: 1.8,
+                                    labelSpacing: 30,
+                                    style: TextStyle(
+                                      color: AppColors.jclWhite.withOpacity(0.7),
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        _formatDate(dateTime),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.jclWhite.withOpacity(0.5),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '•',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.jclWhite.withOpacity(0.5),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          caseData['surgeryClass'] as String? ?? '',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.jclWhite.withOpacity(0.5),
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                color: AppColors.jclOrange,
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CaseDetailScreen(
+                                      caseId: caseData['caseID'] as String,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
                 ),
               ],
             ),

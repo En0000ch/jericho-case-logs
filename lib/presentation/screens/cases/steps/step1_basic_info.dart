@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/case_form_provider.dart';
+import '../../../providers/facility_provider.dart';
+import '../../../providers/surgeon_provider.dart';
 import '../../../../core/themes/app_colors.dart';
 
 class Step1BasicInfo extends ConsumerStatefulWidget {
@@ -67,6 +69,302 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
             surgeon: _surgeonController.text.trim(),
           ),
         );
+  }
+
+  void _showFacilityPicker() {
+    final facilityAsync = ref.read(facilityProvider);
+    print('DEBUG FACILITY PICKER: AsyncValue state: ${facilityAsync.toString()}');
+
+    // Extract facilities from AsyncValue
+    final facilities = facilityAsync.when(
+      data: (data) {
+        print('DEBUG FACILITY PICKER: Got ${data.length} facilities: $data');
+        return data;
+      },
+      loading: () {
+        print('DEBUG FACILITY PICKER: Still loading...');
+        return <String>[];
+      },
+      error: (error, stack) {
+        print('DEBUG FACILITY PICKER: Error: $error');
+        return <String>[];
+      },
+    );
+
+    final formData = ref.read(caseFormProvider).formData;
+    String? selected = formData.location;
+
+    print('DEBUG MODAL: Opening facility picker with white background');
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(color: AppColors.jclOrange),
+                          ),
+                        ),
+                        const Text(
+                          'Select Facility',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.jclGray,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            if (selected != null && selected!.isNotEmpty) {
+                              _locationController.text = selected!;
+                              _updateFormData();
+                            }
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text(
+                            'Done',
+                            style: TextStyle(
+                              color: AppColors.jclOrange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+
+                  // Facility List
+                  Flexible(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                      ),
+                      child: facilities.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.all(32.0),
+                              child: Center(
+                                child: Text(
+                                  'No facilities found',
+                                  style: TextStyle(color: AppColors.jclGray),
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: facilities.length,
+                              itemBuilder: (context, index) {
+                                final facility = facilities[index];
+                                final isSelected = selected == facility;
+
+                                return Material(
+                                  color: Colors.white,
+                                  child: InkWell(
+                                    onTap: () {
+                                      setModalState(() {
+                                        selected = facility;
+                                      });
+                                    },
+                                    child: Container(
+                                      color: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            facility,
+                                            style: const TextStyle(
+                                              color: AppColors.jclGray,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            const Icon(
+                                              Icons.check,
+                                              color: AppColors.jclOrange,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSurgeonPicker() {
+    final surgeonAsync = ref.read(surgeonProvider);
+    print('DEBUG SURGEON PICKER: AsyncValue state: ${surgeonAsync.toString()}');
+
+    // Extract surgeons from AsyncValue
+    final surgeons = surgeonAsync.when(
+      data: (data) {
+        print('DEBUG SURGEON PICKER: Got ${data.length} surgeons: $data');
+        return data;
+      },
+      loading: () {
+        print('DEBUG SURGEON PICKER: Still loading...');
+        return <String>[];
+      },
+      error: (error, stack) {
+        print('DEBUG SURGEON PICKER: Error: $error');
+        return <String>[];
+      },
+    );
+
+    final formData = ref.read(caseFormProvider).formData;
+    String? selected = formData.surgeon;
+
+    print('DEBUG MODAL: Opening surgeon picker with white background');
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(color: AppColors.jclOrange),
+                          ),
+                        ),
+                        const Text(
+                          'Select Surgeon',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.jclGray,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            if (selected != null && selected!.isNotEmpty) {
+                              _surgeonController.text = selected!;
+                              _updateFormData();
+                            }
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text(
+                            'Done',
+                            style: TextStyle(
+                              color: AppColors.jclOrange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+
+                  // Surgeon List
+                  Flexible(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                      ),
+                      child: surgeons.isEmpty
+                          ? const Padding(
+                              padding: EdgeInsets.all(32.0),
+                              child: Center(
+                                child: Text(
+                                  'No surgeons found',
+                                  style: TextStyle(color: AppColors.jclGray),
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: surgeons.length,
+                              itemBuilder: (context, index) {
+                                final surgeon = surgeons[index];
+                                final isSelected = selected == surgeon;
+
+                                return Material(
+                                  color: Colors.white,
+                                  child: InkWell(
+                                    onTap: () {
+                                      setModalState(() {
+                                        selected = surgeon;
+                                      });
+                                    },
+                                    child: Container(
+                                      color: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            surgeon,
+                                            style: const TextStyle(
+                                              color: AppColors.jclGray,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            const Icon(
+                                              Icons.check,
+                                              color: AppColors.jclOrange,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -172,13 +470,19 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _locationController,
+                  readOnly: true,
+                  onTap: _showFacilityPicker,
                   decoration: InputDecoration(
-                    hintText: 'e.g., Main OR 2',
+                    hintText: 'Tap to select facility',
                     filled: true,
                     fillColor: AppColors.jclGray.withOpacity(0.05),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
+                    ),
+                    suffixIcon: const Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.jclOrange,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -198,7 +502,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                       ),
                     ),
                   ),
-                  onChanged: (_) => _updateFormData(),
                 ),
               ],
             ),
@@ -234,13 +537,19 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _surgeonController,
+                  readOnly: true,
+                  onTap: _showSurgeonPicker,
                   decoration: InputDecoration(
-                    hintText: 'e.g., Dr. Smith',
+                    hintText: 'Tap to select surgeon',
                     filled: true,
                     fillColor: AppColors.jclGray.withOpacity(0.05),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
+                    ),
+                    suffixIcon: const Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.jclOrange,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -260,7 +569,6 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo> {
                       ),
                     ),
                   ),
-                  onChanged: (_) => _updateFormData(),
                 ),
               ],
             ),

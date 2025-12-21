@@ -1,0 +1,1074 @@
+# Copyright (C) 2024 3D viewer by Visody
+# This file is distributed under the same license as the 3D viewer by Visody package.
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2024-01-05 11:06:48+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2025-06-07 13:12:40+00:00\n"
+"Last-Translator: Visody <support@visody.com>\n"
+
+#. Plugin Name of the plugin
+msgid "3D viewer by Visody"
+msgstr ""
+
+#. Description of the plugin
+msgid "Easily add beautiful, fully-customizable 3D viewers to your WooCommerce product galleries and WordPress pages! AR capabilies included."
+msgstr ""
+
+#. Author of the plugin
+#: admin/class-visody-viewer.php:51
+msgid "Visody"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://visody.com/"
+msgstr ""
+
+#: admin/class-visody-admin.php:203
+msgid "Thank you for creating with %s. Please rate %s to help spread the word!"
+msgstr ""
+
+#: admin/class-visody-admin.php:222
+msgid "Visody "
+msgstr ""
+
+#: admin/class-visody-options.php:54
+msgid "Viewer appearance"
+msgstr ""
+
+#: admin/class-visody-options.php:58
+msgid "Viewer background color"
+msgstr ""
+
+#: admin/class-visody-options.php:64
+msgid "Loader bar color"
+msgstr ""
+
+#: admin/class-visody-options.php:70
+msgid "Loader progress color"
+msgstr ""
+
+#: admin/class-visody-options.php:76
+msgid "Button border radius"
+msgstr ""
+
+#: admin/class-visody-options.php:79
+#: admin/class-visody-options.php:86
+msgid "Use CSS units (e.g. 1px)"
+msgstr ""
+
+#: admin/class-visody-options.php:83
+msgid "Button border width"
+msgstr ""
+
+#: admin/class-visody-options.php:90
+msgid "Button background"
+msgstr ""
+
+#: admin/class-visody-options.php:96
+msgid "Button border color"
+msgstr ""
+
+#: admin/class-visody-options.php:102
+msgid "Button text color"
+msgstr ""
+
+#: admin/class-visody-options.php:108
+msgid "Button loader icon color"
+msgstr ""
+
+#: admin/class-visody-options.php:111
+msgid "AR button loader icon color"
+msgstr ""
+
+#: admin/class-visody-options.php:115
+msgid "Button hover background"
+msgstr ""
+
+#: admin/class-visody-options.php:121
+msgid "Button hover text color"
+msgstr ""
+
+#: admin/class-visody-options.php:127
+msgid "Close button background"
+msgstr ""
+
+#: admin/class-visody-options.php:133
+msgid "Close button border color"
+msgstr ""
+
+#: admin/class-visody-options.php:139
+msgid "Close button text color"
+msgstr ""
+
+#: admin/class-visody-options.php:145
+msgid "Close button hover background"
+msgstr ""
+
+#: admin/class-visody-options.php:151
+msgid "Close button hover text color"
+msgstr ""
+
+#: admin/class-visody-options.php:157
+msgid "Button shadow"
+msgstr ""
+
+#: admin/class-visody-options.php:159
+msgid "Remove button shadows"
+msgstr ""
+
+#: admin/class-visody-options.php:164
+msgid "Viewer controls"
+msgstr ""
+
+#: admin/class-visody-options.php:168
+msgid "Fullscreen button display"
+msgstr ""
+
+#: admin/class-visody-options.php:170
+msgid "Show fullscreen button in viewer"
+msgstr ""
+
+#: admin/class-visody-options.php:174
+msgid "Camera button display"
+msgstr ""
+
+#: admin/class-visody-options.php:176
+msgid "Show camera button in viewer"
+msgstr ""
+
+#: admin/class-visody-options.php:180
+msgid "Zoom buttons display"
+msgstr ""
+
+#: admin/class-visody-options.php:182
+msgid "Show zoom in and out buttons in viewer"
+msgstr ""
+
+#: admin/class-visody-options.php:183
+msgid "Note: this automatically disables the zoom to scroll ability in the viewer"
+msgstr ""
+
+#: admin/class-visody-options.php:187
+msgid "Zoom button factor"
+msgstr ""
+
+#: admin/class-visody-options.php:192
+msgid "Enter zoom factor. Higher numbers will change zoom level faster."
+msgstr ""
+
+#: admin/class-visody-options.php:200
+msgid "Floating button position"
+msgstr ""
+
+#: admin/class-visody-options.php:203
+msgid "Inside the product image"
+msgstr ""
+
+#: admin/class-visody-options.php:204
+msgid "Underneath the product images"
+msgstr ""
+
+#: admin/class-visody-options.php:207
+#: admin/class-visody-options.php:231
+msgid "Position of floating 3D and AR buttons"
+msgstr ""
+
+#: admin/class-visody-options.php:211
+msgid "Floating gallery button position"
+msgstr ""
+
+#: admin/class-visody-options.php:214
+msgid "Bottom right"
+msgstr ""
+
+#: admin/class-visody-options.php:215
+msgid "Bottom left"
+msgstr ""
+
+#: admin/class-visody-options.php:216
+msgid "Top right"
+msgstr ""
+
+#: admin/class-visody-options.php:217
+msgid "Top left"
+msgstr ""
+
+#: admin/class-visody-options.php:220
+msgid "Position of floating buttons within the gallery"
+msgstr ""
+
+#: admin/class-visody-options.php:224
+msgid "Control button positions"
+msgstr ""
+
+#: admin/class-visody-options.php:227
+msgid "Right"
+msgstr ""
+
+#: admin/class-visody-options.php:228
+msgid "Left"
+msgstr ""
+
+#: admin/class-visody-options.php:235
+msgid "3D button icon display"
+msgstr ""
+
+#: admin/class-visody-options.php:237
+msgid "Hide 3D button icon"
+msgstr ""
+
+#: admin/class-visody-options.php:241
+msgid "3D button text"
+msgstr ""
+
+#: admin/class-visody-options.php:246
+msgid "AR button icon display"
+msgstr ""
+
+#: admin/class-visody-options.php:252
+msgid "AR button text"
+msgstr ""
+
+#: admin/class-visody-options.php:257
+msgid "Close button label"
+msgstr ""
+
+#: admin/class-visody-options.php:262
+msgid "Fullscreen button label"
+msgstr ""
+
+#: admin/class-visody-options.php:267
+msgid "Camera button label"
+msgstr ""
+
+#: admin/class-visody-options.php:273
+msgid "Viewer icons"
+msgstr ""
+
+#: admin/class-visody-options.php:277
+msgid "AR button icon"
+msgstr ""
+
+#: admin/class-visody-options.php:282
+msgid "AR button hover icon"
+msgstr ""
+
+#: admin/class-visody-options.php:287
+msgid "3D button icon"
+msgstr ""
+
+#: admin/class-visody-options.php:292
+msgid "3D button hover icon"
+msgstr ""
+
+#: admin/class-visody-options.php:297
+msgid "Close button icon"
+msgstr ""
+
+#: admin/class-visody-options.php:302
+msgid "Close button hover icon"
+msgstr ""
+
+#: admin/class-visody-options.php:307
+msgid "Fullscreen button icon"
+msgstr ""
+
+#: admin/class-visody-options.php:312
+msgid "Fullscreen button hover icon"
+msgstr ""
+
+#: admin/class-visody-options.php:317
+msgid "Camera button icon"
+msgstr ""
+
+#: admin/class-visody-options.php:322
+msgid "Camer button hover icon"
+msgstr ""
+
+#: admin/class-visody-options.php:327
+msgid "Zoom in button icon"
+msgstr ""
+
+#: admin/class-visody-options.php:332
+msgid "Zoom in button hover icon"
+msgstr ""
+
+#: admin/class-visody-options.php:337
+msgid "Zoom out button icon"
+msgstr ""
+
+#: admin/class-visody-options.php:342
+msgid "Zoom out button hover icon"
+msgstr ""
+
+#: admin/class-visody-options.php:348
+msgid "Advanced"
+msgstr ""
+
+#: admin/class-visody-options.php:352
+msgid "Gallery selector"
+msgstr ""
+
+#: admin/class-visody-options.php:359
+msgid "Gallery wrapper selector"
+msgstr ""
+
+#: admin/class-visody-options.php:366
+msgid "Gallery item selector"
+msgstr ""
+
+#: admin/class-visody-options.php:373
+msgid "Gallery item active selector"
+msgstr ""
+
+#: admin/class-visody-options.php:380
+msgid "Gallery thumbnail item selector"
+msgstr ""
+
+#: admin/class-visody-options.php:387
+msgid "Gallery trigger selector"
+msgstr ""
+
+#: admin/class-visody-options.php:394
+msgid "Gallery checker interval"
+msgstr ""
+
+#: admin/class-visody-options.php:398
+msgid "Interval to check if gallery has been loaded (in milliseconds)"
+msgstr ""
+
+#: admin/class-visody-options.php:403
+msgid "Custom CSS"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:47
+#: admin/class-visody-viewer-template.php:49
+#: admin/class-visody-viewer-template.php:56
+#: admin/partials/admin-header.php:25
+msgid "Templates"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:48
+#: admin/class-visody-viewer-template.php:50
+msgid "Template"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:51
+#: admin/class-visody-viewer-template.php:53
+msgid "New viewer template"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:52
+msgid "Add new viewer template"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:54
+msgid "Edit viewer template"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:55
+msgid "View viewer template"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:57
+msgid "Search viewer templates"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:58
+msgid "Parent viewer templates:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:59
+msgid "No viewer templates found."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:60
+msgid "No viewer templates found in bin."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:95
+msgid "Model scene"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:99
+msgid "Model environment image"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:100
+msgid "Upload HDR environment image in WordPress"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:105
+msgid "Model environment url"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:106
+msgid "Enter link to external HDR environment image"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:112
+msgid "Skybox"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:114
+msgid "Use environment image as skybox"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:118
+msgid "Skybox height"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:119
+msgid "Optionally control height of skybox view (e.g. 15m)"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:125
+msgid "Exposure"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:130
+#: admin/class-visody-viewer-template.php:140
+msgid "Set number between 0.00 and 2.00"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:135
+msgid "Shadow intensity"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:145
+msgid "Shadow softness"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:150
+msgid "Set number between 0.00 and 1.00"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:155
+msgid "AR mode"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:157
+msgid "Disable AR mode"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:161
+msgid "AR placement"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:164
+msgid "Place on floor"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:165
+msgid "Place on wall"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:175
+msgid "AR zoom"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:177
+msgid "Disable AR zoom"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:186
+msgid "Camera options"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:190
+msgid "Auto-rotate"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:192
+msgid "Auto rotate model"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:196
+msgid "Rotation delay:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:199
+msgid "Start autorotating after X milliseconds."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:209
+msgid "Rotation per second:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:211
+msgid "Enter a number with unit (e.g., \"30deg\", \"0.5rad\" or \"-100%\")."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:220
+msgid "Initial camera position X:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:226
+msgid "Enter number between -180.00 and 180.00. Defaults to exported model position."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:230
+msgid "Initial camera position Y:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:236
+msgid "Set number between 0.00 (top) and 180.00 (bottom). Defaults to exported model position."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:240
+msgid "Target point"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:242
+msgid "Modify model position"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:246
+msgid "Target point X:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:248
+#: admin/class-visody-viewer-template.php:261
+#: admin/class-visody-viewer-template.php:273
+#: admin/class-visody-viewer-template.php:292
+#: admin/class-visody-viewer-template.php:305
+#: admin/class-visody-viewer-template.php:318
+#: admin/class-visody-viewer-template.php:331
+msgid "Enter a number with 2 decimals (e.g. 0.00)."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:258
+msgid "Target point Y:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:271
+msgid "Target point Z:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:283
+msgid "Camera view limit"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:285
+msgid "Apply camera viewer limits"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:289
+msgid "Horizontal limit to right:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:290
+msgid "Counter-clockwise limit"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:302
+msgid "Horizontal limit to left:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:303
+msgid "Clockwise limit"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:315
+msgid "Vertical limit from top:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:316
+msgid "Top-down limit"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:328
+msgid "Vertical limit from bottom:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:329
+msgid "Bottom-up limit"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:341
+msgid "Camera zoom"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:343
+msgid "Apply minimum model zoom"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:347
+msgid "Camera minimum zoom:"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:348
+msgid "Set full minimum camera zoom level value (e.g. 25deg)."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:358
+msgid "Camera interpolation"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:363
+msgid "Smoothness of the 3D model viewer interactions. Higher is smoother."
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:367
+msgid "Disable camera controls"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:369
+msgid "Block interaction with the 3D viewer"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:373
+msgid "Touch action"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:374
+msgid "Optionally change the touch action behaviour"
+msgstr ""
+
+#: admin/class-visody-viewer-template.php:375
+msgid "pan-y"
+msgstr ""
+
+#: admin/class-visody-viewer.php:49
+#: admin/class-visody-viewer.php:52
+#: admin/class-visody-viewer.php:58
+msgid "3D Viewers"
+msgstr ""
+
+#: admin/class-visody-viewer.php:50
+msgid "3D Viewer"
+msgstr ""
+
+#: admin/class-visody-viewer.php:53
+#: admin/class-visody-viewer.php:55
+msgid "New 3D viewer"
+msgstr ""
+
+#: admin/class-visody-viewer.php:54
+msgid "Add new 3D viewer"
+msgstr ""
+
+#: admin/class-visody-viewer.php:56
+msgid "Edit 3D viewer"
+msgstr ""
+
+#: admin/class-visody-viewer.php:57
+msgid "View 3D viewer"
+msgstr ""
+
+#: admin/class-visody-viewer.php:59
+msgid "Search 3D viewers"
+msgstr ""
+
+#: admin/class-visody-viewer.php:60
+msgid "Parent 3D viewers:"
+msgstr ""
+
+#: admin/class-visody-viewer.php:61
+msgid "No 3D viewers found."
+msgstr ""
+
+#: admin/class-visody-viewer.php:62
+msgid "No 3D viewers found in bin."
+msgstr ""
+
+#: admin/class-visody-viewer.php:135
+msgid "3D model"
+msgstr ""
+
+#: admin/class-visody-viewer.php:136
+msgid "Choose or upload your 3D GLB model file"
+msgstr ""
+
+#: admin/class-visody-viewer.php:141
+#: admin/class-visody-woocommerce.php:126
+msgid "3D model url"
+msgstr ""
+
+#: admin/class-visody-viewer.php:142
+msgid "Enter full URL to the 3D GLB model file location. Make sure location is publicly accessible."
+msgstr ""
+
+#: admin/class-visody-viewer.php:148
+#: admin/class-visody-woocommerce.php:135
+msgid "3D iOS model url"
+msgstr ""
+
+#: admin/class-visody-viewer.php:149
+#: admin/class-visody-woocommerce.php:136
+msgid "Enter full URL to the iOS 3D model file location (USDZ format). Make sure location is publicly accessible."
+msgstr ""
+
+#: admin/class-visody-viewer.php:155
+#: admin/class-visody-woocommerce.php:182
+msgid "3D model poster"
+msgstr ""
+
+#: admin/class-visody-viewer.php:157
+msgid "Use image as loader image"
+msgstr ""
+
+#: admin/class-visody-viewer.php:161
+msgid "3D loader image"
+msgstr ""
+
+#: admin/class-visody-viewer.php:162
+msgid "Choose image to show while loading in the 3D model"
+msgstr ""
+
+#: admin/class-visody-viewer.php:171
+#: admin/class-visody-woocommerce.php:174
+msgid "3D loader percentage"
+msgstr ""
+
+#: admin/class-visody-viewer.php:173
+msgid "Show loader percentage"
+msgstr ""
+
+#: admin/class-visody-viewer.php:181
+#: admin/class-visody-woocommerce.php:224
+msgid "Viewer frame ratio"
+msgstr ""
+
+#: admin/class-visody-viewer.php:182
+msgid "Customize viewer frame ratio"
+msgstr ""
+
+#: admin/class-visody-viewer.php:198
+#: admin/class-visody-woocommerce.php:245
+msgid "Viewer frame ratio mobile"
+msgstr ""
+
+#: admin/class-visody-viewer.php:199
+msgid "Customize viewer frame ratio for mobile"
+msgstr ""
+
+#: admin/class-visody-viewer.php:215
+#: admin/class-visody-woocommerce.php:192
+msgid "Viewer template"
+msgstr ""
+
+#: admin/class-visody-viewer.php:216
+#: admin/class-visody-woocommerce.php:193
+msgid "Select viewer template for the 3D model"
+msgstr ""
+
+#: admin/class-visody-welcome.php:44
+#: admin/class-visody-welcome.php:45
+msgid "Welcome"
+msgstr ""
+
+#: admin/class-visody-welcome.php:60
+msgid "Welcome to Visody!"
+msgstr ""
+
+#: admin/class-visody-welcome.php:68
+msgid "Display interactive 3D viewers in WooCommerce product galleries and on WordPress pages"
+msgstr ""
+
+#: admin/class-visody-welcome.php:70
+msgid "Documentation"
+msgstr ""
+
+#: admin/class-visody-welcome.php:72
+msgid "FAQ"
+msgstr ""
+
+#: admin/class-visody-welcome.php:75
+msgid "Get help"
+msgstr ""
+
+#: admin/class-visody-welcome.php:80
+msgid "Add 3D product viewers to your products in 3 steps"
+msgstr ""
+
+#: admin/class-visody-welcome.php:82
+msgid "1. Add your 3D models"
+msgstr ""
+
+#: admin/class-visody-welcome.php:85
+msgid "Add to website pages"
+msgstr ""
+
+#: admin/class-visody-welcome.php:86
+msgid "Simply go to Visody -> 3D viewers, click \"New 3D viewer\" and set your 3D model. You can upload the 3D model to WordPress or add a link to the 3D model source file."
+msgstr ""
+
+#: admin/class-visody-welcome.php:87
+msgid "Go to 3D viewers"
+msgstr ""
+
+#: admin/class-visody-welcome.php:95
+msgid "Add to WooCommerce products"
+msgstr ""
+
+#: admin/class-visody-welcome.php:96
+msgid "Simply go to Products -> Your product and locate the \"Visody Viewer\" tab. Check the box \"Activate Visody 3D product viewer\" and set your 3D model. You can upload the 3D model to WordPress or add a link to the 3D model source file."
+msgstr ""
+
+#: admin/class-visody-welcome.php:97
+msgid "Go to products"
+msgstr ""
+
+#: admin/class-visody-welcome.php:106
+msgid "2. Customize the 3D viewer camera settings"
+msgstr ""
+
+#: admin/class-visody-welcome.php:107
+msgid "The plugin comes with templates to modify the product viewer options, like camera position, model position and environment images."
+msgstr ""
+
+#: admin/class-visody-welcome.php:108
+msgid "Simply go to Visody -> Templates and add a new viewer template. When you are done, go back to your product, re-open the Visody Viewer tab and select the newly created viewer in Viewer template field."
+msgstr ""
+
+#: admin/class-visody-welcome.php:109
+msgid "Add a new viewer template"
+msgstr ""
+
+#: admin/class-visody-welcome.php:117
+msgid "3. Personalize the 3D viewer appearance"
+msgstr ""
+
+#: admin/class-visody-welcome.php:118
+msgid "With the 3D model in place, you can customize the viewer appearance."
+msgstr ""
+
+#: admin/class-visody-welcome.php:119
+msgid "Change the default colors and buttons to make it fit in with your webshop."
+msgstr ""
+
+#: admin/class-visody-welcome.php:120
+msgid "Customize settings"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:48
+msgid "Visody Viewer"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:72
+msgid "Visody viewer"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:73
+msgid "Activate Visody 3D product viewer"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:127
+msgid "Enter URL to location of your 3D model. Use only when no 3D model set."
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:144
+msgid "Inline viewer"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:145
+msgid "Show product viewer inline in WooCommerce gallery"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:152
+msgid "Inline position"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:153
+msgid "Select viewer inline position for the 3D model"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:157
+msgid "On top of the gallery image"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:158
+msgid "Above the gallery image"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:159
+msgid "Below the gallery image"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:166
+msgid "Gallery slide display"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:167
+msgid "Show product viewer inline on last slide in WooCommerce Gallery"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:175
+msgid "Show loader percentage above loader bar (not visible when using loader image)"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:183
+msgid "Use product thumbnail as loader image"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:205
+msgid "Viewer notes"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:206
+msgid "Select annotations for the 3D model"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:216
+msgid "Shortcode display"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:217
+msgid "Show product viewer inline at shortcode location instead of WooCommerce Gallery"
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:225
+msgid "Customize viewer frame ratio. Only applicable to shortcode display."
+msgstr ""
+
+#: admin/class-visody-woocommerce.php:246
+msgid "Customize viewer frame ratio for mobile. Only applicable to shortcode display."
+msgstr ""
+
+#: admin/partials/admin-header.php:19
+msgid "Viewers"
+msgstr ""
+
+#: admin/partials/admin-header.php:37
+msgid "Appearance"
+msgstr ""
+
+#: admin/partials/admin-header.php:48
+msgid "Go PRO"
+msgstr ""
+
+#: includes/simple-fields/includes/class-visody-meta-fields.php:240
+#: includes/simple-fields/visody-simple-fields.php:108
+msgid "Upload image"
+msgstr ""
+
+#: includes/simple-fields/includes/class-visody-meta-fields.php:253
+msgid "Remove image"
+msgstr ""
+
+#: includes/simple-fields/includes/class-visody-meta-fields.php:273
+#: includes/simple-fields/includes/class-visody-meta-fields.php:279
+msgid "Remove file"
+msgstr ""
+
+#: includes/simple-fields/includes/class-visody-meta-fields.php:277
+#: includes/simple-fields/visody-simple-fields.php:112
+msgid "Upload file"
+msgstr ""
+
+#: includes/simple-fields/includes/class-visody-meta-fields.php:334
+#: includes/simple-fields/visody-simple-fields.php:83
+msgid "Add images"
+msgstr ""
+
+#: includes/simple-fields/includes/class-visody-meta-fields.php:355
+msgid "Group"
+msgstr ""
+
+#: includes/simple-fields/includes/class-visody-meta-fields.php:367
+msgid "Remove line"
+msgstr ""
+
+#: includes/simple-fields/includes/class-visody-meta-fields.php:373
+msgid "Add item"
+msgstr ""
+
+#: includes/simple-fields/visody-simple-fields.php:75
+msgid "Insert image"
+msgstr ""
+
+#: includes/simple-fields/visody-simple-fields.php:76
+msgid "Use this image"
+msgstr ""
+
+#: includes/simple-fields/visody-simple-fields.php:77
+msgid "Upload Image"
+msgstr ""
+
+#: includes/simple-fields/visody-simple-fields.php:78
+msgid "Insert file"
+msgstr ""
+
+#: includes/simple-fields/visody-simple-fields.php:79
+msgid "Use this file"
+msgstr ""
+
+#: includes/simple-fields/visody-simple-fields.php:80
+msgid "Upload File"
+msgstr ""
+
+#: includes/simple-fields/visody-simple-fields.php:82
+msgid "Insert images"
+msgstr ""
+
+#: includes/simple-fields/visody-simple-fields.php:84
+msgid "The same images are not allowed."
+msgstr ""
+
+#: includes/visody-functions.php:29
+msgid "- Choose viewer template -"
+msgstr ""
+
+#: includes/visody-functions.php:67
+msgid "Close icon"
+msgstr ""
+
+#: includes/visody-functions.php:68
+msgid "Close 3D product viewer"
+msgstr ""
+
+#: includes/visody-functions.php:74
+msgid "AR icon"
+msgstr ""
+
+#: includes/visody-functions.php:75
+msgid "View model in AR"
+msgstr ""
+
+#: includes/visody-functions.php:81
+msgid "Fullscreen icon"
+msgstr ""
+
+#: includes/visody-functions.php:82
+msgid "View model in fullscreen"
+msgstr ""
+
+#: includes/visody-functions.php:87
+msgid "Camera icon"
+msgstr ""
+
+#: includes/visody-functions.php:88
+msgid "Save image of model"
+msgstr ""
+
+#: includes/visody-functions.php:138
+msgid "Zoom in icon"
+msgstr ""
+
+#: includes/visody-functions.php:139
+msgid "Zoom in on model"
+msgstr ""
+
+#: includes/visody-functions.php:144
+msgid "Zoom out icon"
+msgstr ""
+
+#: includes/visody-functions.php:145
+msgid "Zoom out on model"
+msgstr ""
+
+#: includes/visody-functions.php:173
+msgid "AR is not supported on this device"
+msgstr ""
+
+#: includes/visody-functions.php:303
+msgid "%s"
+msgstr ""
+
+#: public/class-visody-public.php:585
+msgid "Viewer ID is not set or invalid"
+msgstr ""

@@ -1,0 +1,5 @@
+:root {
+    {% for variable in variables %}
+        {{ self.globalCssVariable(variable) }}
+    {% endfor %}
+}

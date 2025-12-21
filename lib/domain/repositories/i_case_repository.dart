@@ -19,6 +19,7 @@ abstract class ICaseRepository {
     String? airwayManagement,
     String? additionalComments,
     bool? complications,
+    String? imageName,
   });
 
   /// Get all cases for a user
@@ -36,12 +37,14 @@ abstract class ICaseRepository {
     String? asaClassification,
     String? procedureSurgery,
     String? anestheticPlan,
+    String? secondaryAnesthetic,
     List<String>? anestheticsUsed,
     String? surgeryClass,
     String? location,
     String? airwayManagement,
     String? additionalComments,
     bool? complications,
+    String? imageName,
   });
 
   /// Delete a case

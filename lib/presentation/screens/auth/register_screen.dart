@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/themes/app_colors.dart';
+import '../../widgets/glow_button.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -113,6 +114,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     style: const TextStyle(color: AppColors.jclGray, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'Email',
@@ -133,6 +136,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     style: const TextStyle(color: AppColors.jclGray, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Password',
@@ -167,6 +172,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     style: const TextStyle(color: AppColors.jclGray, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Confirm Password',
@@ -200,6 +207,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   // First Name Field (Optional)
                   TextFormField(
                     controller: _firstNameController,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     style: const TextStyle(color: AppColors.jclGray, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'First Name (Optional)',
@@ -210,6 +219,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   // Last Name Field (Optional)
                   TextFormField(
                     controller: _lastNameController,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     style: const TextStyle(color: AppColors.jclGray, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'Last Name (Optional)',
@@ -220,6 +231,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   // Title Field (Optional)
                   TextFormField(
                     controller: _titleController,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     style: const TextStyle(color: AppColors.jclGray, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'Title (e.g., CRNA, MD) (Optional)',
@@ -281,38 +294,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Register Button
-                  SizedBox(
-                    height: 35,
-                    child: ElevatedButton(
-                      onPressed: authState.isLoading ? null : _handleRegister,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: AppColors.jclOrange,
-                        side: const BorderSide(color: AppColors.jclOrange, width: 1.5),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  // Register Button with Glow Effect
+                  if (authState.isLoading)
+                    const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.jclOrange,
                       ),
-                      child: authState.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.jclOrange,
-                              ),
-                            )
-                          : const Text(
-                              'Create Account',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                    )
+                  else
+                    GlowButton(
+                      text: 'Create Account',
+                      onPressed: _handleRegister,
+                      isPrimary: true,
+                      icon: Icons.person_add,
                     ),
-                  ),
                   const SizedBox(height: 24),
 
                   // Already have account

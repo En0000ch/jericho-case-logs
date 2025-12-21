@@ -122,6 +122,8 @@ class _Step5AdditionalDetailsState
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _airwayController,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   decoration: InputDecoration(
                     hintText: 'e.g., ETT, LMA',
                     filled: true,
@@ -235,6 +237,8 @@ class _Step5AdditionalDetailsState
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _commentsController,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   decoration: InputDecoration(
                     hintText: 'Any additional notes...',
                     filled: true,

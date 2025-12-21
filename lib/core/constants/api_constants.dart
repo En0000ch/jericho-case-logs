@@ -12,6 +12,7 @@ class ApiConstants {
   static const String skillsClass = 'jclSkills';
   static const String cmeClass = 'jclCME';
   static const String jobsClass = 'jclJobs';
+  static const String savedSurgeriesClass = 'savedSurgeries';
   static const String usersClass = '_User';
 
   // Local Database

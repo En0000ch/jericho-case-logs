@@ -6,9 +6,12 @@ class AppColors {
   static const Color jclOrange = Color(0xFFEE6C4D);      // RGB(0.933, 0.424, 0.302)
   static const Color jclGray = Color(0xFF2B3241);        // RGB(0.167, 0.196, 0.255)
   static const Color jclWhite = Color(0xFFE0FBFC);       // RGB(0.878, 0.984, 0.988)
+  static const Color jclWhiteBg = Color(0xFFF8F5F2);     // Background white for dialogs
   static const Color jclTaupe = Color(0xFF483C32);       // RGB(0.282, 0.235, 0.196)
   static const Color jclOrangeLite = Color(0x80EE6C4D);  // jclOrange with 50% alpha
   static const Color jclGrayLite = Color(0x802B3241);    // jclGray with 50% alpha
+  static const Color jclGreen = Color(0xFF34C759);       // systemGreen equivalent
+  static const Color jclBrownText = Color(0xFF483C32);   // RGB(72,60,50)
 
   // Primary Colors (using jclOrange as main brand color)
   static const Color primary = jclOrange;

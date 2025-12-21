@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/case_form_provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/themes/app_colors.dart';
+import '../../../../data/models/case_model.dart';
 
 class Step2SurgerySelection extends ConsumerStatefulWidget {
   const Step2SurgerySelection({super.key});
@@ -79,11 +80,16 @@ class _Step2SurgerySelectionState extends ConsumerState<Step2SurgerySelection> {
                         TextButton(
                           onPressed: () {
                             if (selectedClass != null) {
+                              // Calculate image name based on selected surgery class
+                              final imageName = CaseModel.getImageNameForSurgeryClass(selectedClass);
+
                               ref
                                   .read(caseFormProvider.notifier)
                                   .updateFormData(
                                     formData.copyWith(
-                                        surgeryClass: selectedClass),
+                                      surgeryClass: selectedClass,
+                                      imageName: imageName,
+                                    ),
                                   );
                             }
                             Navigator.of(context).pop();
@@ -144,9 +150,11 @@ class _Step2SurgerySelectionState extends ConsumerState<Step2SurgerySelection> {
   Widget build(BuildContext context) {
     final formData = ref.watch(caseFormProvider).formData;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    return Container(
+      color: AppColors.jclGray,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
         // Instructions
         Card(
           color: AppColors.jclWhite,
@@ -294,6 +302,7 @@ class _Step2SurgerySelectionState extends ConsumerState<Step2SurgerySelection> {
           ),
         ),
       ],
+      ),
     );
   }
 }

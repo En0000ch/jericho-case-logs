@@ -1,0 +1,16 @@
+{% if settings.override_variables.override_variables %}
+%%SELECTOR%% {
+    {% for variable in settings.override_variables.override_variables %}
+        {% set cssVariableName = null %}
+
+        {# Loop through global variables to find the cssVariableName for this override #}
+        {% for globalVariable in variables %}
+            {% if globalVariable.id == variable.id %}
+                {% set cssVariableName = globalVariable.cssVariableName %}
+            {% endif %}
+        {% endfor %}
+
+        {{ self.globalCssVariable(variable, cssVariableName) }}
+    {% endfor %}
+}
+{% endif %}

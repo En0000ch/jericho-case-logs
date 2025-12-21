@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
+import '../../../core/themes/app_colors.dart';
+import '../../widgets/glow_button.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
   const ProfileEditScreen({super.key});
@@ -109,6 +111,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             // Email (read-only)
             TextFormField(
               initialValue: user.email,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: const InputDecoration(
                 labelText: 'Email',
                 prefixIcon: Icon(Icons.email),
@@ -126,6 +130,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       : user.isAdmin
                           ? 'Administrator'
                           : 'User',
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: const InputDecoration(
                 labelText: 'Account Type',
                 prefixIcon: Icon(Icons.category),
@@ -146,6 +152,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             // First Name
             TextFormField(
               controller: _firstNameController,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: const InputDecoration(
                 labelText: 'First Name',
                 prefixIcon: Icon(Icons.person_outline),
@@ -158,6 +166,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             // Last Name
             TextFormField(
               controller: _lastNameController,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: const InputDecoration(
                 labelText: 'Last Name',
                 prefixIcon: Icon(Icons.person_outline),
@@ -170,6 +180,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             // Professional Title
             TextFormField(
               controller: _titleController,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: const InputDecoration(
                 labelText: 'Professional Title',
                 prefixIcon: Icon(Icons.work),
@@ -205,26 +217,21 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Save Button
-            ElevatedButton(
-              onPressed: authState.isLoading ? null : _saveProfile,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            // Save Button with Glow Effect
+            if (authState.isLoading)
+              const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.jclOrange,
+                ),
+              )
+            else
+              GlowButton(
+                text: 'Save Changes',
+                onPressed: _saveProfile,
+                isPrimary: true,
+                icon: Icons.save,
               ),
-              child: authState.isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text(
-                      'Save Changes',
-                      style: TextStyle(fontSize: 16),
-                    ),
-            ),
           ],
         ),
       ),

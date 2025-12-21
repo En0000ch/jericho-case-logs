@@ -104,6 +104,7 @@ class _GeneralAnestheticSelectionScreenState
           controller: textController,
           autofocus: true,
           autocorrect: false,
+          enableSuggestions: false,
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
             hintText: 'Enter option',

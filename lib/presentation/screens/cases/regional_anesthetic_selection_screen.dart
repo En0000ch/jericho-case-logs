@@ -122,6 +122,7 @@ class _RegionalAnestheticSelectionScreenState
           controller: textController,
           autofocus: true,
           autocorrect: false,
+          enableSuggestions: false,
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
             hintText: 'Enter option',
@@ -331,6 +332,8 @@ class _RegionalAnestheticSelectionScreenState
                   padding: const EdgeInsets.all(8.0),
                   child: TextField(
                     controller: _searchController,
+                    autocorrect: false,
+                    enableSuggestions: false,
                     decoration: InputDecoration(
                       hintText: 'Search',
                       prefixIcon: const Icon(Icons.search),

@@ -51,4 +51,7 @@ abstract class IAuthRepository {
 
   /// Clear saved credentials
   Future<Either<Failure, void>> clearSavedCredentials();
+
+  /// Request password reset email
+  Future<Either<Failure, bool>> requestPasswordReset(String email);
 }

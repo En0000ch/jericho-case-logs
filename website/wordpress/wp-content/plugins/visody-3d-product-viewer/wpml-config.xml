@@ -1,0 +1,13 @@
+<wpml-config>
+	<admin-texts>
+		<key name="visody_3d_button_text" />
+		<key name="visody_ar_button_text" />
+		<key name="visody_close_button_text" />
+		<key name="visody_fs_button_text" />
+		<key name="visody_cam_button_text" />
+		<key name="visody_ar_desktop_button_text" />
+		<key name="visody_ar_desktop_close_button_text" />
+		<key name="visody_ar_desktop_modal_title" />
+		<key name="visody_ar_desktop_modal_text" />
+	</admin-texts>
+</wpml-config>

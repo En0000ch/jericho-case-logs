@@ -1,0 +1,77 @@
+{
+	"apiVersion": "1",
+	"name": "tdvb/td-viewer",
+	"title": "3D Viewer",
+	"description": "Display interactive 3D models on the web.",
+	"category": "widgets",
+	"keywords": [
+		"3d",
+		"3d model",
+		"3d viewer"
+	],
+	"textdomain": "model-viewer",
+	"attributes": {
+		"align": {
+			"type": "string",
+			"default": ""
+		},
+		"cId": {
+			"type": "string",
+			"default": ""
+		},
+		"alignment": {
+			"type": "string",
+			"default": "center"
+		},
+		"sourceType": {
+			"type": "string",
+			"default": "upload"
+		},
+		"model": {
+			"type": "object",
+			"default": {
+				"id": null,
+				"url": "",
+				"title": ""
+			}
+		},
+		"modelLink": {
+			"type": "string",
+			"default": ""
+		},
+		"width": {
+			"type": "string",
+			"default": "100%"
+		},
+		"height": {
+			"type": "string",
+			"default": "350px"
+		},
+		"isTouchMove": {
+			"type": "boolean",
+			"default": true
+		},
+		"isZoom": {
+			"type": "boolean",
+			"default": true
+		},
+		"loadingType": {
+			"type": "string",
+			"default": "auto"
+		}
+	},
+	"supports": {
+		"align": [
+			"wide",
+			"full"
+		],
+		"html": false
+	},
+	"example": {
+		"attributes": {
+			"preview": true,
+			"sourceType": "link"
+		}
+	},
+	"editorScript": "file:../dist/editor.js"
+}

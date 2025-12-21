@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/case_provider.dart';
+import '../../providers/facility_provider.dart';
+import '../../providers/surgeon_provider.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../../core/data/surgery_data.dart';
 import '../../../core/data/complications_data.dart';
 import '../../../core/data/comorbidities_data.dart';
-import '../../../data/datasources/local/shared_prefs_service.dart';
+import '../../../data/models/case_model.dart';
 import '../settings/settings_update_screen.dart';
 import 'multi_selection_screen.dart';
 import 'general_anesthetic_selection_screen.dart';
 import 'regional_anesthetic_selection_screen.dart';
 import '../../widgets/confetti_widget.dart';
+import '../../widgets/glow_button.dart';
+import '../../widgets/single_select_dialog.dart';
 
 /// iOS-style Case Creation Flow with Sequential Popups
 /// Flow: Date → Facility → Surgeon → Specialty → Surgery → Anesthesia → Secondary? → Age → ASA
@@ -61,16 +66,54 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
     setState(() => _isLoading = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final prefsService = SharedPrefsService(prefs);
+      print('DEBUG: Starting _loadData...');
 
-      // Load and alphabetize facilities
-      _facilities = await prefsService.getFacilities();
-      _facilities.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      final user = ref.read(currentUserProvider);
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
 
-      // Load and alphabetize surgeons
-      _surgeons = await prefsService.getSurgeons();
-      _surgeons.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      // Load facilities DIRECTLY from Parse Server (same as dashboard update screen)
+      final facilityQuery = QueryBuilder<ParseObject>(ParseObject('savedFacilities'))
+        ..whereEqualTo('userEmail', user.email);
+      final facilityResponse = await facilityQuery.query();
+
+      if (facilityResponse.success && facilityResponse.results != null && facilityResponse.results!.isNotEmpty) {
+        final parseObject = facilityResponse.results!.first as ParseObject;
+        final arrayData = parseObject.get<List<dynamic>>('userFacilities');
+        if (arrayData != null) {
+          _facilities = arrayData
+              .map((e) => e.toString())
+              .where((item) => item.trim().isNotEmpty)
+              .map((item) => item.trim())
+              .toSet()
+              .toList();
+          _facilities.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        }
+      }
+
+      print('DEBUG: Loaded ${_facilities.length} facilities from Parse: $_facilities');
+
+      // Load surgeons DIRECTLY from Parse Server (same as dashboard update screen)
+      final surgeonQuery = QueryBuilder<ParseObject>(ParseObject('savedSurgeons'))
+        ..whereEqualTo('userEmail', user.email);
+      final surgeonResponse = await surgeonQuery.query();
+
+      if (surgeonResponse.success && surgeonResponse.results != null && surgeonResponse.results!.isNotEmpty) {
+        final parseObject = surgeonResponse.results!.first as ParseObject;
+        final arrayData = parseObject.get<List<dynamic>>('userSurgeons');
+        if (arrayData != null) {
+          _surgeons = arrayData
+              .map((e) => e.toString())
+              .where((item) => item.trim().isNotEmpty)
+              .map((item) => item.trim())
+              .toSet()
+              .toList();
+          _surgeons.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        }
+      }
+
+      print('DEBUG: Loaded ${_surgeons.length} surgeons from Parse: $_surgeons');
 
       // Note: surgeries will be loaded per-specialty in _SurgeryListScreen
 
@@ -79,7 +122,9 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
         // Start the flow with new case alert
         _showNewCaseAlert();
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('DEBUG: Error loading data: $e');
+      print('DEBUG: Stack trace: $stackTrace');
       if (mounted) {
         setState(() => _isLoading = false);
         _showError('Failed to load data: $e');
@@ -96,17 +141,48 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
   Future<void> _saveFacilities() async {
     // Alphabetize before saving
     _facilities.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    final prefs = await SharedPreferences.getInstance();
-    final prefsService = SharedPrefsService(prefs);
-    await prefsService.saveFacilities(_facilities);
+    // Save through facility provider to sync with Parse server
+    await ref.read(facilityProvider.notifier).updateFacilities(_facilities);
   }
 
   Future<void> _saveSurgeons() async {
     // Alphabetize before saving
     _surgeons.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    // Save through surgeon provider to sync with Parse server
+    await ref.read(surgeonProvider.notifier).updateSurgeons(_surgeons);
+  }
+
+  // 24-hour facility caching
+  Future<void> _saveCachedFacility(String facility) async {
     final prefs = await SharedPreferences.getInstance();
-    final prefsService = SharedPrefsService(prefs);
-    await prefsService.saveSurgeons(_surgeons);
+    await prefs.setString('cached_facility', facility);
+    await prefs.setInt('cached_facility_timestamp', DateTime.now().millisecondsSinceEpoch);
+    print('DEBUG: Saved cached facility: $facility at ${DateTime.now()}');
+  }
+
+  Future<String?> _getCachedFacility() async {
+    final prefs = await SharedPreferences.getInstance();
+    final facility = prefs.getString('cached_facility');
+    final timestamp = prefs.getInt('cached_facility_timestamp');
+
+    if (facility == null || timestamp == null) {
+      print('DEBUG: No cached facility found');
+      return null;
+    }
+
+    final cachedTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    final now = DateTime.now();
+    final difference = now.difference(cachedTime);
+
+    print('DEBUG: Cached facility: $facility, age: ${difference.inHours} hours');
+
+    // Check if less than 24 hours old
+    if (difference.inHours < 24) {
+      return facility;
+    } else {
+      print('DEBUG: Cached facility expired');
+      return null;
+    }
   }
 
   // Step 0: New Case Alert (iOS addNewCaseAlert)
@@ -136,9 +212,39 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop(); // Close dialog
-              _showDatePicker(); // Start the case entry flow
+
+              // Set date to current date
+              setState(() => _selectedDate = DateTime.now());
+
+              // Check for cached facility
+              final cachedFacility = await _getCachedFacility();
+              if (cachedFacility != null) {
+                print('DEBUG: Using cached facility: $cachedFacility');
+                setState(() => _facility = cachedFacility);
+                // Navigate to background screen, then show surgeon picker
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => _CaseBuilderBackgroundScreen(
+                      date: _selectedDate!,
+                      facility: _facility,
+                      onReady: (ctx) => _showSurgeonPickerOnBackground(ctx),
+                    ),
+                  ),
+                );
+              } else {
+                // Navigate to background screen, then show facility picker
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => _CaseBuilderBackgroundScreen(
+                      date: _selectedDate!,
+                      facility: null,
+                      onReady: (ctx) => _showFacilityPickerOnBackground(ctx),
+                    ),
+                  ),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
@@ -177,10 +283,37 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
                   ),
                   const Text('Select Date', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black)),
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       setState(() => _selectedDate = selectedDate);
                       Navigator.of(context).pop();
-                      _showFacilityPicker();
+
+                      // Check for cached facility
+                      final cachedFacility = await _getCachedFacility();
+                      if (cachedFacility != null) {
+                        print('DEBUG: Using cached facility: $cachedFacility');
+                        setState(() => _facility = cachedFacility);
+                        // Navigate to background screen, then show surgeon picker
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => _CaseBuilderBackgroundScreen(
+                              date: _selectedDate!,
+                              facility: _facility,
+                              onReady: (ctx) => _showSurgeonPickerOnBackground(ctx),
+                            ),
+                          ),
+                        );
+                      } else {
+                        // Navigate to background screen, then show facility picker
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => _CaseBuilderBackgroundScreen(
+                              date: _selectedDate!,
+                              facility: null,
+                              onReady: (ctx) => _showFacilityPickerOnBackground(ctx),
+                            ),
+                          ),
+                        );
+                      }
                     },
                     child: const Text('Done', style: TextStyle(color: AppColors.jclOrange, fontWeight: FontWeight.bold)),
                   ),
@@ -211,13 +344,302 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
     }
   }
 
-  // Step 2: Facility Picker
+  // Step 2: Facility Picker - matches Edit Case page exactly
   Future<void> _showFacilityPicker() async {
+    final result = await _showFacilityListPicker();
+
+    if (result != null) {
+      setState(() => _facility = result);
+      // Save facility to 24-hour cache
+      await _saveCachedFacility(result);
+      _showSurgeonPicker();
+    } else if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  // Facility List Picker - iOS chooseFacilityList: equivalent
+  /// Matches iOS SCLAlertView implementation exactly
+  Future<String?> _showFacilityListPicker() async {
+    final facilityAsync = ref.read(facilityProvider);
+    List<String> facilities = facilityAsync.when(
+      data: (data) => data.toList(),
+      loading: () => <String>[],
+      error: (_, __) => <String>[],
+    );
+
+    String? selected;
+
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            backgroundColor: AppColors.jclWhite,
+            title: Row(
+              children: [
+                Image.asset(
+                  'assets/images/hospital-sign-40.png',
+                  width: 24,
+                  height: 24,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.local_hospital, color: AppColors.jclGray, size: 24);
+                  },
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Select Facility',
+                  style: TextStyle(color: AppColors.jclGray, fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 200,
+              child: facilities.isEmpty
+                  ? const Center(child: Text('No facilities found', style: TextStyle(color: AppColors.jclGray)))
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: facilities.length,
+                      itemBuilder: (context, index) {
+                        final facility = facilities[index];
+                        final isSelected = selected == facility;
+                        return ListTile(
+                          title: Text(facility, style: const TextStyle(color: AppColors.jclGray)),
+                          trailing: isSelected
+                              ? const Icon(Icons.check_circle, color: AppColors.jclOrange)
+                              : null,
+                          selected: isSelected,
+                          selectedTileColor: AppColors.jclOrange.withOpacity(0.1),
+                          tileColor: AppColors.jclWhite,
+                          onTap: () {
+                            setDialogState(() {
+                              selected = facility;
+                            });
+                          },
+                        );
+                      },
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(null),
+                child: const Text('Back', style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: selected == null || selected!.isEmpty
+                    ? null
+                    : () => Navigator.of(context).pop(selected),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: AppColors.jclGray,
+                ),
+                child: const Text('Select'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    return result;
+  }
+
+  // Step 3: Surgeon Picker - matches Edit Case page exactly
+  Future<void> _showSurgeonPicker() async {
+    final result = await _showSurgeonListPicker();
+
+    if (result != null) {
+      setState(() => _surgeon = result);
+      _showSurgerySelection();
+    } else if (mounted) {
+      // User pressed back, show facility picker
+      _showFacilityPicker();
+    }
+  }
+
+  // Surgeon List Picker - iOS chooseSurgeonList: equivalent
+  /// Matches iOS SCLAlertView implementation exactly
+  Future<String?> _showSurgeonListPicker() async {
+    final surgeonAsync = ref.read(surgeonProvider);
+    List<String> surgeons = surgeonAsync.when(
+      data: (data) => data.toList(),
+      loading: () => <String>[],
+      error: (_, __) => <String>[],
+    );
+
+    String? selected;
+
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            backgroundColor: AppColors.jclWhite,
+            title: Row(
+              children: [
+                Image.asset(
+                  'assets/images/doctor-40.png',
+                  width: 24,
+                  height: 24,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.medical_services, color: AppColors.jclGray, size: 24);
+                  },
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Select Surgeon',
+                  style: TextStyle(color: AppColors.jclGray, fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 200,
+              child: surgeons.isEmpty
+                  ? const Center(child: Text('No surgeons found', style: TextStyle(color: AppColors.jclGray)))
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: surgeons.length,
+                      itemBuilder: (context, index) {
+                        final surgeon = surgeons[index];
+                        final isSelected = selected == surgeon;
+                        return ListTile(
+                          title: Text(surgeon, style: const TextStyle(color: AppColors.jclGray)),
+                          trailing: isSelected
+                              ? const Icon(Icons.check_circle, color: AppColors.jclOrange)
+                              : null,
+                          selected: isSelected,
+                          selectedTileColor: AppColors.jclOrange.withOpacity(0.1),
+                          tileColor: AppColors.jclWhite,
+                          onTap: () {
+                            setDialogState(() {
+                              selected = surgeon;
+                            });
+                          },
+                        );
+                      },
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(null),
+                child: const Text('Back', style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: selected == null || selected!.isEmpty
+                    ? null
+                    : () => Navigator.of(context).pop(selected),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: AppColors.jclGray,
+                ),
+                child: const Text('Select'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    return result;
+  }
+
+  /// Helper method to show dialog for adding new facility/surgeon
+  Future<String?> _showAddItemDialog(String title, String hint) async {
+    final TextEditingController controller = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.jclWhite,
+        title: Text(
+          title,
+          style: const TextStyle(color: AppColors.jclGray, fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) {
+                Navigator.of(context).pop(value);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.jclOrange,
+              foregroundColor: AppColors.jclWhite,
+            ),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper method to show dialog for adding new facility/surgeon on background screen
+  Future<String?> _showAddItemDialogOnBackground(BuildContext backgroundContext, String title, String hint) async {
+    final TextEditingController controller = TextEditingController();
+
+    return showDialog<String>(
+      context: backgroundContext,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.jclWhite,
+        title: Text(
+          title,
+          style: const TextStyle(color: AppColors.jclGray, fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: hint,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) {
+                Navigator.of(context).pop(value);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.jclOrange,
+              foregroundColor: AppColors.jclWhite,
+            ),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Facility Picker on Background Screen
+  Future<void> _showFacilityPickerOnBackground(BuildContext backgroundContext) async{
     final controller = TextEditingController();
     String? result;
 
     result = await showModalBottomSheet<String>(
-      context: context,
+      context: backgroundContext,
       backgroundColor: AppColors.jclWhite,
       isScrollControlled: true,
       isDismissible: false,
@@ -247,6 +669,8 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
             // Text field
             TextField(
               controller: controller,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: InputDecoration(
                 hintText: 'Enter facility name',
                 border: OutlineInputBorder(
@@ -257,7 +681,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
                   borderSide: const BorderSide(color: AppColors.jclOrange, width: 2),
                 ),
               ),
-              style: const TextStyle(color: Colors.black),
+              style: const TextStyle(color: AppColors.jclGray),
             ),
             const SizedBox(height: 16),
 
@@ -268,7 +692,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      final selected = await _showFacilityListPicker();
+                      final selected = await _showFacilityListPickerOnBackground(backgroundContext);
                       if (selected != null) {
                         Navigator.of(context).pop(selected);
                       }
@@ -314,134 +738,122 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
 
     if (result != null) {
       setState(() => _facility = result);
-      _showSurgeonPicker();
-    } else if (mounted) {
-      Navigator.of(context).pop();
+      await _saveCachedFacility(result);
+      // Update background to show facility, then show surgeon picker
+      if (backgroundContext.mounted) {
+        final backgroundState = backgroundContext.findAncestorStateOfType<_CaseBuilderBackgroundScreenState>();
+        backgroundState?.updateFacility(result);
+        await _showSurgeonPickerOnBackground(backgroundContext);
+      }
+    } else if (backgroundContext.mounted) {
+      // User cancelled, go back
+      Navigator.of(backgroundContext).pop();
     }
   }
 
-  // Facility List Picker - matches iOS chooseFacilityList:
-  Future<String?> _showFacilityListPicker() async {
+  // Facility List Picker on Background Screen
+  Future<String?> _showFacilityListPickerOnBackground(BuildContext backgroundContext) async {
     String? selectedItem;
 
-    return await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: AppColors.jclWhite,
-      isScrollControlled: true,
-      isDismissible: false,
+    return await showDialog<String>(
+      context: backgroundContext,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.7,
-          padding: const EdgeInsets.all(16),
-          color: AppColors.jclWhite,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              const Text(
-                'chooseFacilityList:',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.jclGray,
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.jclWhite,
+          title: const Text(
+            'Select Location',
+            style: TextStyle(color: AppColors.jclGray, fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Add New Facility button
+                ListTile(
+                  leading: const Icon(Icons.add, color: AppColors.jclOrange),
+                  title: const Text('Add New Facility', style: TextStyle(color: AppColors.jclOrange, fontWeight: FontWeight.bold)),
+                  tileColor: AppColors.jclWhite,
+                  onTap: () async {
+                    final newFacility = await _showAddItemDialogOnBackground(backgroundContext, 'Add New Facility', 'Enter facility name');
+                    if (newFacility != null && newFacility.isNotEmpty) {
+                      setDialogState(() {
+                        if (!_facilities.contains(newFacility)) {
+                          _facilities.add(newFacility);
+                          _facilities.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+                        }
+                        selectedItem = newFacility;
+                      });
+                      // Add to Parse
+                      await ref.read(facilityProvider.notifier).addFacility(newFacility);
+                    }
+                  },
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-
-              // List
-              Expanded(
-                child: _facilities.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No facilities saved yet',
-                          style: TextStyle(color: AppColors.jclGray, fontSize: 16),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: _facilities.length,
-                        itemBuilder: (context, index) {
-                          final facility = _facilities[index];
-                          final isSelected = selectedItem == facility;
-                          return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isSelected ? AppColors.jclOrange.withOpacity(0.1) : AppColors.jclWhite,
-                              border: Border(
-                                bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                              ),
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                facility,
-                                style: const TextStyle(
-                                  color: AppColors.jclGray,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                const Divider(),
+                // Facilities list
+                Flexible(
+                  child: _facilities.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No facilities saved yet',
+                            style: TextStyle(color: AppColors.jclGray, fontSize: 16),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _facilities.length,
+                          itemBuilder: (context, index) {
+                            final facility = _facilities[index];
+                            final isSelected = selectedItem == facility;
+                            return ListTile(
+                              title: Text(facility, style: const TextStyle(color: AppColors.jclGray)),
                               trailing: isSelected
-                                  ? const Icon(Icons.check, color: AppColors.jclOrange)
+                                  ? const Icon(Icons.check_circle, color: AppColors.jclOrange)
                                   : null,
+                              selected: isSelected,
+                              selectedTileColor: AppColors.jclOrange.withOpacity(0.1),
+                              tileColor: AppColors.jclWhite,
                               onTap: () {
-                                setModalState(() {
+                                setDialogState(() {
                                   selectedItem = facility;
                                 });
                               },
-                            ),
-                          );
-                        },
-                      ),
-              ),
-              const SizedBox(height: 24),
-
-              // Buttons
-              SafeArea(
-                child: Row(
-                  children: [
-                    // Back Button
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(null),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: Colors.grey),
+                            );
+                          },
                         ),
-                        child: const Text('Back', style: TextStyle(color: Colors.grey, fontSize: 16)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Select Button
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: selectedItem != null
-                            ? () => Navigator.of(context).pop(selectedItem)
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: AppColors.jclOrange,
-                          disabledBackgroundColor: Colors.grey.withOpacity(0.3),
-                        ),
-                        child: const Text('Select', style: TextStyle(color: AppColors.jclWhite, fontSize: 16)),
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: selectedItem == null || selectedItem!.isEmpty
+                  ? null
+                  : () => Navigator.of(context).pop(selectedItem),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: AppColors.jclWhite,
+              ),
+              child: const Text('Select'),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // Step 3: Surgeon Picker
-  Future<void> _showSurgeonPicker() async {
+  // Surgeon Picker on Background Screen
+  Future<void> _showSurgeonPickerOnBackground(BuildContext backgroundContext) async {
     final controller = TextEditingController();
     String? result;
 
     result = await showModalBottomSheet<String>(
-      context: context,
+      context: backgroundContext,
       backgroundColor: AppColors.jclWhite,
       isScrollControlled: true,
       isDismissible: false,
@@ -471,6 +883,8 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
             // Text field
             TextField(
               controller: controller,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: InputDecoration(
                 hintText: 'Enter surgeon name',
                 border: OutlineInputBorder(
@@ -481,7 +895,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
                   borderSide: const BorderSide(color: AppColors.jclOrange, width: 2),
                 ),
               ),
-              style: const TextStyle(color: Colors.black),
+              style: const TextStyle(color: AppColors.jclGray),
             ),
             const SizedBox(height: 16),
 
@@ -492,7 +906,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      final selected = await _showSurgeonListPicker();
+                      final selected = await _showSurgeonListPickerOnBackground(backgroundContext);
                       if (selected != null) {
                         Navigator.of(context).pop(selected);
                       }
@@ -538,122 +952,114 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
 
     if (result != null) {
       setState(() => _surgeon = result);
-      _showSurgerySelection();
-    } else if (mounted) {
-      Navigator.of(context).pop();
+      // Close background screen and continue with surgery selection
+      if (backgroundContext.mounted) {
+        Navigator.of(backgroundContext).pop();
+        _showSurgerySelection();
+      }
+    } else if (backgroundContext.mounted) {
+      // User pressed back, update background to hide facility and show facility picker again
+      final backgroundState = backgroundContext.findAncestorStateOfType<_CaseBuilderBackgroundScreenState>();
+      backgroundState?.updateFacility(null);
+      await _showFacilityPickerOnBackground(backgroundContext);
     }
   }
 
-  // Surgeon List Picker - matches iOS chooseSurgeonList:
-  Future<String?> _showSurgeonListPicker() async {
+  // Surgeon List Picker on Background Screen - iOS chooseSurgeonList: equivalent
+  Future<String?> _showSurgeonListPickerOnBackground(BuildContext backgroundContext) async {
     String? selectedItem;
 
-    return await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: AppColors.jclWhite,
-      isScrollControlled: true,
-      isDismissible: false,
+    return await showDialog<String>(
+      context: backgroundContext,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.7,
-          padding: const EdgeInsets.all(16),
-          color: AppColors.jclWhite,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              const Text(
-                'chooseSurgeonList:',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.jclGray,
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.jclWhite,
+          title: const Text(
+            'Select Surgeon',
+            style: TextStyle(color: AppColors.jclGray, fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Add New Surgeon button
+                ListTile(
+                  leading: const Icon(Icons.add, color: AppColors.jclOrange),
+                  title: const Text('Add New Surgeon', style: TextStyle(color: AppColors.jclOrange, fontWeight: FontWeight.bold)),
+                  tileColor: AppColors.jclWhite,
+                  onTap: () async {
+                    final newSurgeon = await _showAddItemDialogOnBackground(backgroundContext, 'Add New Surgeon', 'Enter surgeon name');
+                    if (newSurgeon != null && newSurgeon.isNotEmpty) {
+                      setDialogState(() {
+                        if (!_surgeons.contains(newSurgeon)) {
+                          _surgeons.add(newSurgeon);
+                          _surgeons.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+                        }
+                        selectedItem = newSurgeon;
+                      });
+                      // Add to Parse
+                      await ref.read(surgeonProvider.notifier).addSurgeon(newSurgeon);
+                    }
+                  },
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-
-              // List
-              Expanded(
-                child: _surgeons.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No surgeons saved yet',
-                          style: TextStyle(color: AppColors.jclGray, fontSize: 16),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: _surgeons.length,
-                        itemBuilder: (context, index) {
-                          final surgeon = _surgeons[index];
-                          final isSelected = selectedItem == surgeon;
-                          return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isSelected ? AppColors.jclOrange.withOpacity(0.1) : AppColors.jclWhite,
-                              border: Border(
-                                bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                              ),
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                surgeon,
-                                style: const TextStyle(
-                                  color: AppColors.jclGray,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                const Divider(),
+                // Surgeons list
+                Flexible(
+                  child: _surgeons.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No surgeons saved yet',
+                            style: TextStyle(color: AppColors.jclGray, fontSize: 16),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _surgeons.length,
+                          itemBuilder: (context, index) {
+                            final surgeon = _surgeons[index];
+                            final isSelected = selectedItem == surgeon;
+                            return ListTile(
+                              title: Text(surgeon, style: const TextStyle(color: AppColors.jclGray)),
                               trailing: isSelected
-                                  ? const Icon(Icons.check, color: AppColors.jclOrange)
+                                  ? const Icon(Icons.check_circle, color: AppColors.jclOrange)
                                   : null,
+                              selected: isSelected,
+                              selectedTileColor: AppColors.jclOrange.withOpacity(0.1),
+                              tileColor: AppColors.jclWhite,
                               onTap: () {
-                                setModalState(() {
+                                setDialogState(() {
                                   selectedItem = surgeon;
                                 });
                               },
-                            ),
-                          );
-                        },
-                      ),
-              ),
-              const SizedBox(height: 24),
-
-              // Buttons
-              SafeArea(
-                child: Row(
-                  children: [
-                    // Back Button
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(null),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: Colors.grey),
+                            );
+                          },
                         ),
-                        child: const Text('Back', style: TextStyle(color: Colors.grey, fontSize: 16)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Select Button
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: selectedItem != null
-                            ? () => Navigator.of(context).pop(selectedItem)
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: AppColors.jclOrange,
-                          disabledBackgroundColor: Colors.grey.withOpacity(0.3),
-                        ),
-                        child: const Text('Select', style: TextStyle(color: AppColors.jclWhite, fontSize: 16)),
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop('not designated'),
+              child: const Text('Skip', style: TextStyle(color: AppColors.jclOrange)),
+            ),
+            ElevatedButton(
+              onPressed: selectedItem == null || selectedItem!.isEmpty
+                  ? null
+                  : () => Navigator.of(context).pop(selectedItem),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: AppColors.jclWhite,
+              ),
+              child: const Text('Select'),
+            ),
+          ],
         ),
       ),
     );
@@ -941,6 +1347,8 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
           initialPrimaryAnesthesia: _primaryAnesthesia,
           initialSecondaryAnesthesia: _secondaryAnesthesia,
           initialAge: _age,
+          facilities: _facilities,
+          surgeons: _surgeons,
           onSave: (caseData) async {
             setState(() {
               _selectedDate = caseData['date'];
@@ -970,9 +1378,10 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
       ),
     );
 
-    // Return to home screen after successful save or cancellation
-    if (mounted) {
-      Navigator.of(context).pop(result);
+    // PatientInfoForm handles the 30-second delay and navigation
+    // When it pops, we return to home screen
+    if (mounted && result == true) {
+      Navigator.of(context).pop(true);
     }
   }
 
@@ -1063,10 +1472,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Skip', style: TextStyle(color: Colors.grey)),
-                  ),
+                  const SizedBox(width: 60),
                   const Text('Patient Age', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black)),
                   TextButton(
                     onPressed: () {
@@ -1248,7 +1654,10 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
         title: Text('Add $hint'),
         content: TextField(
           controller: controller,
+          style: const TextStyle(color: AppColors.jclGray),
           autofocus: true,
+          autocorrect: false,
+          enableSuggestions: false,
           textCapitalization: TextCapitalization.words,
           decoration: InputDecoration(
             hintText: hint,
@@ -1310,6 +1719,9 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
     if (_primaryAnesthesia != null) anestheticsUsed.add(_primaryAnesthesia!);
     if (_secondaryAnesthesia != null) anestheticsUsed.add(_secondaryAnesthesia!);
 
+    // Calculate image name based on surgery class
+    final imageName = CaseModel.getImageNameForSurgeryClass(_specialty);
+
     final notifier = ref.read(caseDetailProvider.notifier);
     final success = await notifier.createCase(
       userEmail: user.email,
@@ -1325,6 +1737,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
       airwayManagement: _airwayManagement,
       additionalComments: commentParts.join('\n'),
       complications: _complications.isNotEmpty,
+      imageName: imageName,
     );
 
     if (mounted) {
@@ -1334,7 +1747,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Case created successfully'), backgroundColor: Colors.green),
         );
-        Navigator.of(context).pop();
+        // Navigation is handled by PatientInfoForm after 30 second delay
       } else {
         final state = ref.read(caseDetailProvider);
         _showError(state.error ?? 'Failed to save case');
@@ -1459,7 +1872,7 @@ class _SurgerySelectionScreenState extends State<_SurgerySelectionScreen> {
     },
     {
       'title': 'Out-of-Operating Room Procedures',
-      'image': 'assets/images/out_of_room.png',
+      'image': 'assets/images/out-of-room procedures.png',
       'color': const Color(0xFF95A5A6),
     },
     {
@@ -1540,7 +1953,7 @@ class _SurgerySelectionScreenState extends State<_SurgerySelectionScreen> {
         ),
         body: Container(
           decoration: BoxDecoration(
-            color: AppColors.jclWhite,
+            color: AppColors.jclGray.withOpacity(0.9),
             image: DecorationImage(
               image: const AssetImage('assets/images/jcl_logo_dark.png'),
               fit: BoxFit.contain,
@@ -1729,7 +2142,10 @@ class _SurgeryListScreenState extends State<_SurgeryListScreen> {
         title: const Text('Add New Surgery'),
         content: TextField(
           controller: controller,
+          style: const TextStyle(color: AppColors.jclGray),
           autofocus: true,
+          autocorrect: false,
+          enableSuggestions: false,
           textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(
             hintText: 'Enter surgery name',
@@ -1892,6 +2308,9 @@ class _SurgeryListScreenState extends State<_SurgeryListScreen> {
               padding: const EdgeInsets.all(16),
               child: TextField(
                 controller: _searchController,
+                style: const TextStyle(color: AppColors.jclGray),
+                autocorrect: false,
+                enableSuggestions: false,
                 decoration: InputDecoration(
                   hintText: 'Search surgeries...',
                   prefixIcon: const Icon(Icons.search, color: AppColors.jclOrange),
@@ -1988,6 +2407,8 @@ class _LogCaseViewScreen extends StatefulWidget {
   final String? initialSecondaryAnesthesia;
   final int? initialAge;
   final Function(Map<String, dynamic>) onSave;
+  final List<String> facilities;
+  final List<String> surgeons;
 
   const _LogCaseViewScreen({
     required this.initialDate,
@@ -1999,6 +2420,8 @@ class _LogCaseViewScreen extends StatefulWidget {
     this.initialSecondaryAnesthesia,
     this.initialAge,
     required this.onSave,
+    required this.facilities,
+    required this.surgeons,
   });
 
   @override
@@ -2031,7 +2454,7 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
     _surgeonController = TextEditingController(text: widget.initialSurgeon);
     _surgeryController = TextEditingController(text: widget.initialSurgery);
     _primaryAnestheticController = TextEditingController(text: widget.initialPrimaryAnesthesia ?? '');
-    _secondaryAnestheticController = TextEditingController(text: widget.initialSecondaryAnesthesia ?? '');
+    _secondaryAnestheticController = TextEditingController(text: widget.initialSecondaryAnesthesia ?? 'N/A');
     _dateController = TextEditingController(
       text: '${widget.initialDate.month}/${widget.initialDate.day}/${widget.initialDate.year}',
     );
@@ -2053,6 +2476,7 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String placeholder,
+    VoidCallback? onTap,
   }) {
     return Container(
       height: 40,
@@ -2064,6 +2488,10 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
       ),
       child: TextField(
         controller: controller,
+        autocorrect: false,
+        enableSuggestions: false,
+        readOnly: onTap != null,
+        onTap: onTap,
         style: const TextStyle(color: AppColors.jclGray, fontSize: 16),
         decoration: InputDecoration(
           hintText: placeholder,
@@ -2072,6 +2500,352 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showAgePicker() async {
+    int selectedAge = int.tryParse(_ageController.text) ?? 30; // Use current age or default to 30
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.jclWhite,
+      builder: (context) => Container(
+        height: 300,
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 60),
+                  const Text('Patient Age', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.black)),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _ageController.text = selectedAge.toString());
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Done', style: TextStyle(color: AppColors.jclOrange, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+            // iOS Age Picker
+            Expanded(
+              child: CupertinoPicker(
+                itemExtent: 40,
+                scrollController: FixedExtentScrollController(initialItem: selectedAge),
+                onSelectedItemChanged: (int index) {
+                  selectedAge = index;
+                },
+                children: List<Widget>.generate(121, (int index) {
+                  return Center(
+                    child: Text(
+                      '$index',
+                      style: const TextStyle(fontSize: 20, color: Colors.black),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showFacilityPicker() async {
+    String? selectedItem;
+
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.jclWhite,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const Text('Select Facility', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.jclGray)),
+              const SizedBox(height: 16),
+              // Add New Facility Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final newFacility = await _showAddNewDialog(
+                      context: context,
+                      title: 'Add New Facility',
+                      hint: 'Enter facility name',
+                    );
+                    if (newFacility != null && newFacility.isNotEmpty && context.mounted) {
+                      Navigator.pop(context, newFacility);
+                    }
+                  },
+                  icon: const Icon(Icons.add, color: AppColors.jclWhite),
+                  label: const Text('Add New Facility', style: TextStyle(color: AppColors.jclWhite)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.jclOrange,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: AppColors.jclGray),
+              const SizedBox(height: 8),
+              Expanded(
+                child: widget.facilities.isEmpty
+                    ? const Center(child: Text('No facilities saved yet', style: TextStyle(color: AppColors.jclGray)))
+                    : ListView.builder(
+                        itemCount: widget.facilities.length,
+                        itemBuilder: (context, index) {
+                          final facility = widget.facilities[index];
+                          final isSelected = selectedItem == facility;
+                          return ListTile(
+                            title: Text(facility, style: const TextStyle(color: AppColors.jclGray)),
+                            trailing: isSelected ? const Icon(Icons.check, color: AppColors.jclOrange) : null,
+                            onTap: () {
+                              setModalState(() => selectedItem = facility);
+                            },
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel', style: TextStyle(color: AppColors.jclGray)),
+                    ),
+                  ),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, selectedItem),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.jclOrange),
+                      child: const Text('Done', style: TextStyle(color: AppColors.jclWhite)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() => _locationController.text = result);
+    }
+  }
+
+  Future<void> _showSurgeonPicker() async {
+    String? selectedItem;
+
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.jclWhite,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const Text('Select Surgeon', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.jclGray)),
+              const SizedBox(height: 16),
+              // Add New Surgeon Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final newSurgeon = await _showAddNewDialog(
+                      context: context,
+                      title: 'Add New Surgeon',
+                      hint: 'Enter surgeon name',
+                    );
+                    if (newSurgeon != null && newSurgeon.isNotEmpty && context.mounted) {
+                      Navigator.pop(context, newSurgeon);
+                    }
+                  },
+                  icon: const Icon(Icons.add, color: AppColors.jclWhite),
+                  label: const Text('Add New Surgeon', style: TextStyle(color: AppColors.jclWhite)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.jclOrange,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: AppColors.jclGray),
+              const SizedBox(height: 8),
+              Expanded(
+                child: widget.surgeons.isEmpty
+                    ? const Center(child: Text('No surgeons saved yet', style: TextStyle(color: AppColors.jclGray)))
+                    : ListView.builder(
+                        itemCount: widget.surgeons.length,
+                        itemBuilder: (context, index) {
+                          final surgeon = widget.surgeons[index];
+                          final isSelected = selectedItem == surgeon;
+                          return ListTile(
+                            title: Text(surgeon, style: const TextStyle(color: AppColors.jclGray)),
+                            trailing: isSelected ? const Icon(Icons.check, color: AppColors.jclOrange) : null,
+                            onTap: () {
+                              setModalState(() => selectedItem = surgeon);
+                            },
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel', style: TextStyle(color: AppColors.jclGray)),
+                    ),
+                  ),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, selectedItem),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.jclOrange),
+                      child: const Text('Done', style: TextStyle(color: AppColors.jclWhite)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() => _surgeonController.text = result);
+    }
+  }
+
+  Future<void> _showSurgeryPicker() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const _SurgerySelectionScreen(),
+      ),
+    );
+
+    if (result != null && result is Map<String, String>) {
+      setState(() {
+        _surgeryController.text = result['surgery'] ?? '';
+      });
+    }
+  }
+
+  Future<void> _showDatePicker() async {
+    final now = DateTime.now();
+    DateTime selectedDate = now;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.jclWhite,
+      builder: (context) => Container(
+        height: 300,
+        color: AppColors.jclWhite,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.jclWhite,
+                border: Border(
+                  bottom: BorderSide(
+                    color: AppColors.jclGray.withOpacity(0.2),
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: AppColors.jclGray),
+                    ),
+                  ),
+                  const Text(
+                    'Select Date',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.jclGray,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _dateController.text = '${selectedDate.month}/${selectedDate.day}/${selectedDate.year}';
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Done',
+                      style: TextStyle(
+                        color: AppColors.jclOrange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: now,
+                minimumDate: DateTime(now.year - 5),
+                maximumDate: now,
+                onDateTimeChanged: (DateTime newDate) {
+                  selectedDate = newDate;
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showPrimaryAnestheticPicker() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const GeneralAnestheticSelectionScreen(isTIVA: false),
+      ),
+    );
+
+    if (result != null && result is String) {
+      setState(() {
+        _primaryAnestheticController.text = result;
+      });
+    }
+  }
+
+  Future<void> _showSecondaryAnestheticPicker() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const RegionalAnestheticSelectionScreen(),
+      ),
+    );
+
+    if (result != null && result is String) {
+      setState(() {
+        _secondaryAnestheticController.text = result.isEmpty ? 'N/A' : result;
+      });
+    }
   }
 
   void _showNotesDialog() {
@@ -2083,7 +2857,10 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
           title: const Text('Patient Notes'),
           content: TextField(
             controller: controller,
+            style: const TextStyle(color: AppColors.jclGray),
             maxLines: 10,
+            autocorrect: false,
+            enableSuggestions: false,
             decoration: const InputDecoration(
               hintText: 'Enter patient notes...',
               border: OutlineInputBorder(),
@@ -2100,6 +2877,81 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                 Navigator.pop(context);
               },
               child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<String?> _showAddNewDialog({
+    required BuildContext context,
+    required String title,
+    required String hint,
+  }) async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.jclWhite,
+          title: Text(
+            title,
+            style: const TextStyle(color: AppColors.jclGray),
+          ),
+          content: TextField(
+            controller: controller,
+            style: const TextStyle(color: AppColors.jclGray),
+            autocorrect: false,
+            enableSuggestions: false,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(color: AppColors.jclGray.withOpacity(0.5)),
+              filled: true,
+              fillColor: AppColors.jclGray.withOpacity(0.05),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: AppColors.jclGray.withOpacity(0.2),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: AppColors.jclOrange,
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: AppColors.jclGray),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final text = controller.text.trim();
+                Navigator.pop(context, text);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.jclOrange,
+              ),
+              child: const Text(
+                'Add',
+                style: TextStyle(color: AppColors.jclWhite),
+              ),
             ),
           ],
         );
@@ -2252,15 +3104,86 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
     );
   }
 
+  /// iOS chooseFacilityList: equivalent - Show facility selection dialog
+  void chooseFacilityList() {
+    final facilities = ref.read(facilityProvider).facilities.map((f) => f.name).toList();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return SingleSelectDialog(
+          title: 'Select Facility',
+          iconPath: 'assets/images/hospital-sign-40.png',
+          items: facilities,
+          onSelect: (selectedItem) {
+            if (selectedItem == null) {
+              Navigator.pop(context);
+              // No selection made - could show location alert again if needed
+            } else {
+              setState(() {
+                _locationController.text = selectedItem;
+              });
+              Navigator.pop(context);
+              // Proceed to surgeon selection
+              chooseSurgeonList();
+            }
+          },
+          onBack: () {
+            Navigator.pop(context);
+            // Could show location alert here if needed
+          },
+        );
+      },
+    );
+  }
+
+  /// iOS chooseSurgeonList: equivalent - Show surgeon selection dialog
+  void chooseSurgeonList() {
+    final surgeons = ref.read(surgeonProvider).surgeons.map((s) => s.name).toList();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return SingleSelectDialog(
+          title: 'Select Surgeon',
+          iconPath: 'assets/images/doctor-40.png',
+          items: surgeons,
+          onSelect: (selectedItem) {
+            if (selectedItem == null) {
+              Navigator.pop(context);
+              // No selection made - could show surgeon alert again if needed
+            } else {
+              setState(() {
+                _surgeonController.text = selectedItem;
+              });
+              Navigator.pop(context);
+              // Proceed to surgery selection
+              // _showSurgerySelection(); // Uncomment when implementing surgery selection
+            }
+          },
+          onBack: () {
+            Navigator.pop(context);
+            // Could show facility selection again
+            chooseFacilityList();
+          },
+        );
+      },
+    );
+  }
+
   /// iOS saveRecord: + triggerSnowfall equivalent
   Future<void> _saveWithConfetti() async {
     // Show confetti animation
     setState(() => _showConfetti = true);
+    print('DEBUG: Confetti started');
 
     // Wait for confetti to start, then save
     await Future.delayed(const Duration(milliseconds: 500));
 
     // Save the case and wait for it to complete
+    print('DEBUG: Starting database save...');
     await widget.onSave({
       'date': widget.initialDate,
       'location': _locationController.text,
@@ -2281,11 +3204,21 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
       'airwayManagement': null,
     });
 
-    // Wait for confetti to finish, then close
-    await Future.delayed(const Duration(milliseconds: 1500));
+    print('DEBUG: Database save completed successfully');
+    // Database save completed successfully - wait 5 seconds before returning to homescreen
+    print('DEBUG: Waiting 5 seconds before returning to homescreen...');
+    await Future.delayed(const Duration(seconds: 5));
+    print('DEBUG: 5 seconds elapsed, navigating back to homescreen');
     if (mounted) {
       Navigator.pop(context, true);
     }
+  }
+
+  /// Called when snowfall animation completes
+  /// Matches iOS executeOrder66: dispatch_after delay
+  void _onSnowfallComplete() {
+    // Navigation is now handled in _saveWithConfetti after database save completes
+    // This callback is kept for animation completion event
   }
 
   @override
@@ -2295,6 +3228,7 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
 
     return ConfettiWidget(
       showConfetti: _showConfetti,
+      onAnimationComplete: _onSnowfallComplete,
       child: Scaffold(
         backgroundColor: AppColors.jclGray,
         appBar: AppBar(
@@ -2316,19 +3250,21 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
-                title: const Text('Cancel Case Creation?'),
-                content: const Text('All entered data will be lost.'),
+                title: const Text('Are you sure?'),
+                content: const Text(
+                  'If you \'cancel\' now, all the info you\'ve entered for this case record will be deleted.',
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Continue Editing'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.green),
+                    child: const Text('Continue Case'),
                   ),
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context); // Close dialog
                       Navigator.pop(context, false); // Close form
                     },
-                    style: TextButton.styleFrom(foregroundColor: Colors.red),
                     child: const Text('Cancel Case'),
                   ),
                 ],
@@ -2346,27 +3282,27 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Location
-                _buildTextField(controller: _locationController, placeholder: 'Location'),
+                _buildTextField(controller: _locationController, placeholder: 'Location', onTap: _showFacilityPicker),
                 const SizedBox(height: 8),
 
                 // Surgeon
-                _buildTextField(controller: _surgeonController, placeholder: 'Surgeon'),
+                _buildTextField(controller: _surgeonController, placeholder: 'Surgeon', onTap: _showSurgeonPicker),
                 const SizedBox(height: 8),
 
                 // Surgery
-                _buildTextField(controller: _surgeryController, placeholder: 'Surgery'),
+                _buildTextField(controller: _surgeryController, placeholder: 'Surgery', onTap: _showSurgeryPicker),
                 const SizedBox(height: 8),
 
                 // Primary Anesthetic
-                _buildTextField(controller: _primaryAnestheticController, placeholder: 'Primary Anesthetic'),
+                _buildTextField(controller: _primaryAnestheticController, placeholder: 'Primary Anesthetic', onTap: _showPrimaryAnestheticPicker),
                 const SizedBox(height: 8),
 
                 // Secondary Anesthetic
-                _buildTextField(controller: _secondaryAnestheticController, placeholder: 'Secondary Anesthetic'),
+                _buildTextField(controller: _secondaryAnestheticController, placeholder: 'Secondary Anesthetic', onTap: _showPrimaryAnestheticPicker),
                 const SizedBox(height: 8),
 
                 // Surgery Date
-                _buildTextField(controller: _dateController, placeholder: 'Surgery Date'),
+                _buildTextField(controller: _dateController, placeholder: 'Surgery Date', onTap: _showDatePicker),
                 const SizedBox(height: 20),
 
                 // ASA Classification
@@ -2409,23 +3345,36 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () {
-                        setState(() => _asaEmergency = !_asaEmergency);
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: _asaEmergency ? AppColors.jclOrange : AppColors.jclWhite,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'E',
-                            style: TextStyle(
-                              color: _asaEmergency ? AppColors.jclWhite : AppColors.jclGray,
-                              fontWeight: FontWeight.bold,
+                      onTap: _asaClassification != null
+                          ? () {
+                              setState(() => _asaEmergency = !_asaEmergency);
+                            }
+                          : null,
+                      child: Opacity(
+                        opacity: _asaClassification != null ? 1.0 : 0.5,
+                        child: Container(
+                          width: 40,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: _asaEmergency ? const Color.fromRGBO(238, 108, 97, 1.0) : AppColors.jclWhite,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade400, width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.shade600,
+                                offset: const Offset(0, 3),
+                                blurRadius: 3.0,
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              'E',
+                              style: TextStyle(
+                                color: _asaEmergency ? AppColors.jclWhite : AppColors.jclGray,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
@@ -2458,27 +3407,94 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                         child: TextField(
                           controller: _ageController,
                           keyboardType: TextInputType.number,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          readOnly: true,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(color: AppColors.jclGray, fontSize: 16),
                           decoration: InputDecoration(
                             hintText: 'Age',
                             hintStyle: TextStyle(color: Colors.grey.shade500),
                             border: InputBorder.none,
                           ),
+                          onTap: _showAgePicker,
                         ),
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Expanded(
-                      child: CupertinoSegmentedControl<String>(
-                        padding: EdgeInsets.zero,
-                        groupValue: _gender,
-                        children: const {
-                          'Male': Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.male, size: 20)),
-                          'Female': Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Icon(Icons.female, size: 20)),
-                        },
-                        onValueChanged: (value) {
-                          setState(() => _gender = value);
-                        },
+                    // Male Button
+                    GestureDetector(
+                      onTap: () {
+                        setState(() => _gender = 'Male');
+                      },
+                      child: Container(
+                        width: 50,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: _gender == 'Male' ? Colors.blue : Colors.blue.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _gender == 'Male' ? Colors.blue.shade700 : Colors.blue.shade300,
+                            width: _gender == 'Male' ? 2 : 1,
+                          ),
+                          boxShadow: _gender == 'Male' ? [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.5),
+                              blurRadius: 12,
+                              spreadRadius: 3,
+                            ),
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3),
+                              blurRadius: 20,
+                              spreadRadius: 5,
+                            ),
+                          ] : null,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.male,
+                            size: 20,
+                            color: _gender == 'Male' ? AppColors.jclWhite : Colors.blue.shade700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Female Button
+                    GestureDetector(
+                      onTap: () {
+                        setState(() => _gender = 'Female');
+                      },
+                      child: Container(
+                        width: 50,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: _gender == 'Female' ? Colors.pink : Colors.pink.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _gender == 'Female' ? Colors.pink.shade700 : Colors.pink.shade300,
+                            width: _gender == 'Female' ? 2 : 1,
+                          ),
+                          boxShadow: _gender == 'Female' ? [
+                            BoxShadow(
+                              color: Colors.pink.withOpacity(0.5),
+                              blurRadius: 12,
+                              spreadRadius: 3,
+                            ),
+                            BoxShadow(
+                              color: Colors.pink.withOpacity(0.3),
+                              blurRadius: 20,
+                              spreadRadius: 5,
+                            ),
+                          ] : null,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.female,
+                            size: 20,
+                            color: _gender == 'Female' ? AppColors.jclWhite : Colors.pink.shade700,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -2489,26 +3505,20 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton(
+                      child: GlowButton(
+                        text: 'Notes',
                         onPressed: _showNotesDialog,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.jclOrange,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('Notes', style: TextStyle(color: AppColors.jclWhite)),
+                        isPrimary: true,
+                        isFullWidth: true,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: ElevatedButton(
+                      child: GlowButton(
+                        text: 'Complications',
                         onPressed: _showComplicationsDialog,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.jclOrange,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('Complications', style: TextStyle(color: AppColors.jclWhite)),
+                        isPrimary: true,
+                        isFullWidth: true,
                       ),
                     ),
                   ],
@@ -2519,26 +3529,20 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton(
+                      child: GlowButton(
+                        text: 'Comorbidities',
                         onPressed: _showComorbiditiesDialog,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.jclOrange,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('Comorbidities', style: TextStyle(color: AppColors.jclWhite, fontSize: 13)),
+                        isPrimary: true,
+                        isFullWidth: true,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: ElevatedButton(
+                      child: GlowButton(
+                        text: 'Skilled Procedures',
                         onPressed: _showSkilledProceduresDialog,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.jclOrange,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text('Skilled Procedures', style: TextStyle(color: AppColors.jclWhite, fontSize: 12)),
+                        isPrimary: true,
+                        isFullWidth: true,
                       ),
                     ),
                   ],
@@ -2578,6 +3582,102 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
             ),
           ),
         ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Background Screen for Case Builder Wizard
+/// Shows "Create New Case" title with context information (date/facility) visible behind modal pickers
+class _CaseBuilderBackgroundScreen extends StatefulWidget {
+  final DateTime date;
+  final String? facility;
+  final Function(BuildContext) onReady;
+
+  const _CaseBuilderBackgroundScreen({
+    required this.date,
+    required this.facility,
+    required this.onReady,
+  });
+
+  @override
+  State<_CaseBuilderBackgroundScreen> createState() => _CaseBuilderBackgroundScreenState();
+}
+
+class _CaseBuilderBackgroundScreenState extends State<_CaseBuilderBackgroundScreen> {
+  String? _currentFacility;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentFacility = widget.facility;
+
+    // Show the picker after the screen is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onReady(context);
+    });
+  }
+
+  void updateFacility(String? facility) {
+    setState(() {
+      _currentFacility = facility;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.jclGray,
+      appBar: AppBar(
+        title: const Text(
+          'Create New Case',
+          style: TextStyle(
+            color: AppColors.jclWhite,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: AppColors.jclOrange,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.jclWhite),
+        automaticallyImplyLeading: false,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Case date display
+              Text(
+                '${widget.date.month}/${widget.date.day}/${widget.date.year}',
+                style: const TextStyle(
+                  color: AppColors.jclOrange,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              // Facility display (shown when facility is selected)
+              if (_currentFacility != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _currentFacility!,
+                  style: const TextStyle(
+                    color: AppColors.jclOrange,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

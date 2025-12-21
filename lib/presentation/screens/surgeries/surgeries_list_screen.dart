@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../../domain/entities/surgery_specialty.dart';
+import '../../widgets/marquee_text.dart';
 
 /// Surgeries List Screen
 /// Displays a list of surgeries within a selected specialty
@@ -21,6 +22,7 @@ class _SurgeriesListScreenState extends State<SurgeriesListScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<String> _filteredSurgeries = [];
   List<String> _allSurgeries = [];
+  String? _selectedSurgery;
 
   @override
   void initState() {
@@ -66,6 +68,29 @@ class _SurgeriesListScreenState extends State<SurgeriesListScreen> {
         backgroundColor: AppColors.jclOrange,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.jclWhite),
+        actions: [
+          TextButton(
+            onPressed: _selectedSurgery != null
+                ? () {
+                    Navigator.pop(context, {
+                      'surgeryCategory': widget.specialty.title,
+                      'surgery': _selectedSurgery!,
+                      'imageName': widget.specialty.imageName,
+                    });
+                  }
+                : null,
+            child: Text(
+              'Done',
+              style: TextStyle(
+                color: _selectedSurgery != null
+                    ? AppColors.jclWhite
+                    : AppColors.jclWhite.withOpacity(0.5),
+                fontWeight: FontWeight.w600,
+                fontSize: 17,
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -75,7 +100,7 @@ class _SurgeriesListScreenState extends State<SurgeriesListScreen> {
             color: AppColors.jclOrange,
             child: TextField(
               controller: _searchController,
-              style: const TextStyle(color: AppColors.jclWhite),
+              style: const TextStyle(color: AppColors.jclGray),
               decoration: InputDecoration(
                 hintText: 'Search surgeries...',
                 hintStyle: TextStyle(color: AppColors.jclWhite.withOpacity(0.7)),
@@ -124,29 +149,34 @@ class _SurgeriesListScreenState extends State<SurgeriesListScreen> {
                     ),
                     itemBuilder: (context, index) {
                       final surgery = _filteredSurgeries[index];
+                      final isSelected = _selectedSurgery == surgery;
                       return ListTile(
+                        tileColor: AppColors.jclWhite,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 8,
                         ),
-                        title: Text(
+                        title: MarqueeText(
                           surgery,
+                          maxLines: 1,
+                          scrollSpeed: 30,
+                          pauseInterval: 1.5,
+                          labelSpacing: 30,
                           style: const TextStyle(
                             color: AppColors.jclGray,
                             fontSize: 16,
                           ),
                         ),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: AppColors.jclOrange,
-                        ),
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check_circle,
+                                size: 24,
+                                color: AppColors.jclOrange,
+                              )
+                            : null,
                         onTap: () {
-                          // Return selected surgery
-                          Navigator.pop(context, {
-                            'surgeryCategory': widget.specialty.title,
-                            'surgery': surgery,
-                            'imageName': widget.specialty.imageName,
+                          setState(() {
+                            _selectedSurgery = surgery;
                           });
                         },
                       );

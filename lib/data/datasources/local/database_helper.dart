@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -35,15 +35,20 @@ class DatabaseHelper {
         date INTEGER NOT NULL,
         patientAge INTEGER,
         gender TEXT,
+        surgeonName TEXT,
         asaClassification TEXT NOT NULL,
         procedureSurgery TEXT NOT NULL,
         anestheticPlan TEXT NOT NULL,
+        secondaryAnesthetic TEXT,
         anestheticsUsed TEXT,
         surgeryClass TEXT NOT NULL,
         location TEXT,
         airwayManagement TEXT,
         additionalComments TEXT,
         complications INTEGER,
+        complicationsList TEXT,
+        comorbidities TEXT,
+        skills TEXT,
         imageName TEXT,
         createdAt INTEGER NOT NULL,
         updatedAt INTEGER NOT NULL
@@ -66,6 +71,30 @@ class DatabaseHelper {
       // Add imageName column for version 2
       await db.execute('''
         ALTER TABLE cases ADD COLUMN imageName TEXT
+      ''');
+    }
+    if (oldVersion < 3) {
+      // Add skills, comorbidities, and complicationsList columns for version 3
+      await db.execute('''
+        ALTER TABLE cases ADD COLUMN complicationsList TEXT
+      ''');
+      await db.execute('''
+        ALTER TABLE cases ADD COLUMN comorbidities TEXT
+      ''');
+      await db.execute('''
+        ALTER TABLE cases ADD COLUMN skills TEXT
+      ''');
+    }
+    if (oldVersion < 4) {
+      // Add surgeonName column for version 4
+      await db.execute('''
+        ALTER TABLE cases ADD COLUMN surgeonName TEXT
+      ''');
+    }
+    if (oldVersion < 5) {
+      // Add secondaryAnesthetic column for version 5
+      await db.execute('''
+        ALTER TABLE cases ADD COLUMN secondaryAnesthetic TEXT
       ''');
     }
   }

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasources/remote/parse_skills_service.dart';
 import '../../data/datasources/local/shared_prefs_service.dart';
-import 'surgeon_provider.dart';
+import 'auth_provider.dart';
 
 /// Provider for skills service
 final skillsServiceProvider = Provider<ParseSkillsService>((ref) {

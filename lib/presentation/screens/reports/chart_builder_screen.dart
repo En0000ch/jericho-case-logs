@@ -368,7 +368,15 @@ class _ChartBuilderScreenState extends ConsumerState<ChartBuilderScreen> {
     return Scaffold(
       backgroundColor: AppColors.jclWhite,
       appBar: AppBar(
-        title: const Text('Charts'),
+        title: Text(
+          _selectedChartType,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.jclWhite,
+          ),
+        ),
+        centerTitle: true,
         backgroundColor: AppColors.jclOrange,
         foregroundColor: AppColors.jclWhite,
         leading: IconButton(
@@ -595,19 +603,9 @@ class _ChartBuilderScreenState extends ConsumerState<ChartBuilderScreen> {
                         child: Column(
                           children: [
                             const SizedBox(height: 16),
-                            // Chart Type Label
-                            Text(
-                              _selectedChartType,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
 
                             // Pie Chart or No Data Message
-                            _getFilteredCases().isEmpty
+                            _getFilteredCases().isEmpty || _getChartData().isEmpty
                                 ? SizedBox(
                                     height: 270,
                                     child: Center(
@@ -616,7 +614,14 @@ class _ChartBuilderScreenState extends ConsumerState<ChartBuilderScreen> {
                                         children: [
                                           Icon(Icons.pie_chart, size: 64, color: Colors.grey[400]),
                                           const SizedBox(height: 16),
-                                          const Text('No data for selected range'),
+                                          Text(
+                                            'No data for the time range',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),

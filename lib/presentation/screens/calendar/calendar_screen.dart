@@ -6,8 +6,10 @@ import '../../providers/case_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../../domain/entities/case.dart';
 import '../../../core/themes/app_colors.dart';
+import '../../../core/utils/surgery_image_helper.dart';
 import '../cases/case_detail_screen.dart';
 import '../cases/case_creation_flow_screen.dart';
+import '../../widgets/marquee_text.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
@@ -26,7 +28,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+    _selectedEvents = ValueNotifier([]);
   }
 
   @override
@@ -35,24 +37,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     super.dispose();
   }
 
-  List<Case> _getEventsForDay(DateTime day) {
-    final user = ref.read(currentUserProvider);
-    if (user == null) return [];
-
-    final caseListState = ref.read(caseListProvider(user.email));
-    return caseListState.cases.where((caseItem) {
+  List<Case> _getEventsForDay(DateTime day, List<Case> allCases) {
+    return allCases.where((caseItem) {
       return isSameDay(caseItem.date, day);
     }).toList();
   }
 
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay, List<Case> allCases) {
     if (!isSameDay(_selectedDay, selectedDay)) {
       setState(() {
         _selectedDay = selectedDay;
         _focusedDay = focusedDay;
       });
 
-      _selectedEvents.value = _getEventsForDay(selectedDay);
+      _selectedEvents.value = _getEventsForDay(selectedDay, allCases);
     }
   }
 
@@ -69,18 +67,27 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }
 
     final caseListState = ref.watch(caseListProvider(user.email));
+    final allCases = caseListState.cases;
+
+    // Update selected events when case list changes
+    ref.listen(caseListProvider(user.email), (previous, next) {
+      if (_selectedDay != null) {
+        _selectedEvents.value = _getEventsForDay(_selectedDay!, next.cases);
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.jclGray,
       appBar: AppBar(
         title: const Text(
-          'Calendar',
+          'JCL Calendar',
           style: TextStyle(
             color: AppColors.jclWhite,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
+        centerTitle: true,
         backgroundColor: AppColors.jclOrange,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.jclWhite),
@@ -91,7 +98,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               setState(() {
                 _focusedDay = DateTime.now();
                 _selectedDay = DateTime.now();
-                _selectedEvents.value = _getEventsForDay(DateTime.now());
+                _selectedEvents.value = _getEventsForDay(DateTime.now(), allCases);
               });
             },
             tooltip: 'Today',
@@ -112,7 +119,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     focusedDay: _focusedDay,
                     selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                     calendarFormat: _calendarFormat,
-                    eventLoader: _getEventsForDay,
+                    eventLoader: (day) => _getEventsForDay(day, allCases),
                     startingDayOfWeek: StartingDayOfWeek.sunday,
                     calendarStyle: CalendarStyle(
                       outsideDaysVisible: false,
@@ -183,7 +190,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    onDaySelected: _onDaySelected,
+                    onDaySelected: (selectedDay, focusedDay) => _onDaySelected(selectedDay, focusedDay, allCases),
                     onFormatChanged: (format) {
                       if (_calendarFormat != format) {
                         setState(() {
@@ -223,14 +230,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     fontSize: 16,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Tap + to add a case',
-                                  style: TextStyle(
-                                    color: AppColors.jclOrange,
-                                    fontSize: 14,
-                                  ),
-                                ),
                               ],
                             ),
                           );
@@ -257,29 +256,25 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(6.0),
-                                  child: caseItem.imageName != null
-                                      ? Image.asset(
-                                          'assets/images/${caseItem.imageName}',
-                                          fit: BoxFit.contain,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const Icon(
-                                              Icons.medical_services,
-                                              color: AppColors.jclOrange,
-                                              size: 24,
-                                            );
-                                          },
-                                        )
-                                      : const Icon(
-                                          Icons.medical_services,
-                                          color: AppColors.jclOrange,
-                                          size: 24,
-                                        ),
+                                  child: Image.asset(
+                                    SurgeryImageHelper.getAssetPath(caseItem.imageName, surgeryClass: caseItem.surgeryClass),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.medical_services,
+                                        color: AppColors.jclOrange,
+                                        size: 24,
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
-                              title: Text(
+                              title: MarqueeText(
                                 caseItem.procedureSurgery,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                scrollSpeed: 30,
+                                pauseInterval: 1.5,
+                                labelSpacing: 30,
                                 style: const TextStyle(
                                   color: AppColors.jclWhite,
                                   fontSize: 15,
@@ -289,8 +284,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 4),
-                                  Text(
+                                  MarqueeText(
                                     caseItem.anestheticPlan,
+                                    maxLines: 1,
+                                    scrollSpeed: 24,
+                                    pauseInterval: 1.8,
+                                    labelSpacing: 30,
                                     style: TextStyle(
                                       color: AppColors.jclWhite.withAlpha((255 * 0.7).round()),
                                       fontSize: 13,
@@ -322,8 +321,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                       .read(caseListProvider(user.email)
                                           .notifier)
                                       .loadCases();
-                                  _selectedEvents.value =
-                                      _getEventsForDay(_selectedDay!);
+                                  // Refresh events after returning from detail screen
+                                  if (_selectedDay != null) {
+                                    final updatedCases = ref.read(caseListProvider(user.email)).cases;
+                                    _selectedEvents.value = _getEventsForDay(_selectedDay!, updatedCases);
+                                  }
                                 });
                               },
                             );
@@ -335,20 +337,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const CaseCreationFlowScreen(),
-            ),
-          ).then((_) {
-            ref.read(caseListProvider(user.email).notifier).loadCases();
-            _selectedEvents.value = _getEventsForDay(_selectedDay!);
-          });
-        },
-        backgroundColor: AppColors.jclOrange,
-        child: const Icon(Icons.add, color: AppColors.jclWhite),
-      ),
     );
   }
 }

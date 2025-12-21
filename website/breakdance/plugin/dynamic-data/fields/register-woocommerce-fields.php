@@ -1,0 +1,32 @@
+<?php
+
+namespace Breakdance\DynamicData;
+
+/** Woocommerce */
+if (class_exists('woocommerce')) {
+
+    if (BREAKDANCE_MODE === 'oxygen' && !\Breakdance\WooCommerce\Settings\isWooIntegrationEnabled()) {
+        return;
+    }
+
+    $woocommerce_fields = [
+        new WoocommerceProductDescription(),
+        new WoocommerceProductImageURL(),
+        new WoocommerceProductImage(),
+        new WoocommerceProductPrice(),
+        new WoocommerceProductRating(),
+        new WoocommerceProductSale(),
+        new WoocommerceProductSKU(),
+        new WoocommerceProductStock(),
+        new WoocommerceProductTerms(),
+        new WoocommerceProductTitle(),
+        new WoocommerceProductGallery(),
+        new WoocommerceProductGalleryImage(),
+        new WooCommerceCategoryImage(),
+        new WooCommerceCategoryCount(),
+    ];
+
+    foreach ($woocommerce_fields as $field) {
+        DynamicDataController::getInstance()->registerField($field);
+    }
+}

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import '../../providers/case_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../../core/themes/app_colors.dart';
 
 class CaseDetailScreen extends ConsumerStatefulWidget {
@@ -188,7 +190,7 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'Surgeon: N/A',
+                                    state.caseData!.surgeonName ?? 'N/A',
                                     style: const TextStyle(
                                       color: AppColors.jclWhite,
                                       fontSize: 16,
@@ -309,26 +311,30 @@ class _CaseDetailScreenState extends ConsumerState<CaseDetailScreen> {
                               state.caseData!.additionalComments!.isNotEmpty)
                             const SizedBox(height: 32),
 
-                          // Comorbidities (placeholder for iOS compatibility)
+                          // Comorbidities
                           _TextSection(
                             title: 'Comorbidities',
-                            content: 'N/A',
+                            content: state.caseData!.comorbidities.isEmpty
+                                ? 'None'
+                                : state.caseData!.comorbidities.join(', '),
                           ),
                           const SizedBox(height: 32),
 
                           // Complications
                           _TextSection(
                             title: 'Complications',
-                            content: state.caseData!.complications == true
-                                ? 'Yes'
-                                : 'None',
+                            content: state.caseData!.complicationsList.isEmpty
+                                ? 'None'
+                                : state.caseData!.complicationsList.join(', '),
                           ),
                           const SizedBox(height: 32),
 
-                          // Skills Used (placeholder for iOS compatibility)
+                          // Skills Used
                           _TextSection(
                             title: 'Skills Used',
-                            content: 'N/A',
+                            content: state.caseData!.skills.isEmpty
+                                ? 'None'
+                                : state.caseData!.skills.join(', '),
                           ),
                           const SizedBox(height: 50),
                         ],

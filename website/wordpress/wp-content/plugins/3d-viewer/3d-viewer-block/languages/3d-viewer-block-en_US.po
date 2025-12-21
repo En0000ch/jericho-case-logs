@@ -1,0 +1,151 @@
+# Copyright (C) 2023 bPlugins LLC
+# This file is distributed under the GPLv3.
+msgid ""
+msgstr ""
+"Project-Id-Version: 3D Viewer Block 1.0.8\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/3d-viewer-block\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2023-08-02T12:05:49+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.6.0\n"
+"X-Domain: model-viewer\n"
+
+#. Plugin Name of the plugin
+msgid "3D Viewer Block"
+msgstr ""
+
+#. Description of the plugin
+msgid "Display interactive 3D models on the web"
+msgstr ""
+
+#. Author of the plugin
+msgid "bPlugins LLC"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "http://bplugins.com"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:651
+msgid "Upload"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:652
+msgid "Link"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:656
+msgid "Auto"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:657
+msgid "Lazy"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:658
+msgid "Eager"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:688
+msgid "3D Model Settings"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:694
+msgid "Width:"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:695
+msgid "Keep width 0, to auto width."
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:697
+msgid "Height:"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:698
+msgid "Keep height 0, to 350px height."
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:700
+msgid "Controls via mouse/touch"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:703
+msgid "Zoom"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:704
+msgid "Enable 'Controls via mouse/touch' to work Zoom!"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:708
+msgid "Loading Type:"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:718
+msgid "Edit 3D Model:"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:723
+msgid "3D Model in left"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:724
+msgid "3D Model in center"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:725
+msgid "3D Model in right"
+msgstr ""
+
+#: dist/editor.js:1
+#: dist/editor.js:808
+msgid "Please, upload Model or enter Model Link first!"
+msgstr ""
+
+#: inc/block.json
+msgctxt "block title"
+msgid "3D Viewer"
+msgstr ""
+
+#: inc/block.json
+msgctxt "block description"
+msgid "Display interactive 3D models on the web."
+msgstr ""
+
+#: inc/block.json
+msgctxt "block keyword"
+msgid "3d"
+msgstr ""
+
+#: inc/block.json
+msgctxt "block keyword"
+msgid "3d model"
+msgstr ""
+
+#: inc/block.json
+msgctxt "block keyword"
+msgid "3d viewer"
+msgstr ""

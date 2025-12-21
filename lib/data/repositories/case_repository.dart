@@ -28,6 +28,7 @@ class CaseRepository implements ICaseRepository {
     String? airwayManagement,
     String? additionalComments,
     bool? complications,
+    String? imageName,
   }) async {
     try {
       final response = await ParseCaseService.createCase(
@@ -44,6 +45,7 @@ class CaseRepository implements ICaseRepository {
         airwayManagement: airwayManagement,
         additionalComments: additionalComments,
         complications: complications,
+        imageName: imageName,
       );
 
       if (response.success && response.result != null) {
@@ -170,12 +172,14 @@ class CaseRepository implements ICaseRepository {
     String? asaClassification,
     String? procedureSurgery,
     String? anestheticPlan,
+    String? secondaryAnesthetic,
     List<String>? anestheticsUsed,
     String? surgeryClass,
     String? location,
     String? airwayManagement,
     String? additionalComments,
     bool? complications,
+    String? imageName,
   }) async {
     try {
       final response = await ParseCaseService.updateCase(
@@ -186,12 +190,14 @@ class CaseRepository implements ICaseRepository {
         asaClassification: asaClassification,
         procedureSurgery: procedureSurgery,
         anestheticPlan: anestheticPlan,
+        secondaryAnesthetic: secondaryAnesthetic,
         anestheticsUsed: anestheticsUsed,
         surgeryClass: surgeryClass,
         location: location,
         airwayManagement: airwayManagement,
         additionalComments: additionalComments,
         complications: complications,
+        imageName: imageName,
       );
 
       if (response.success && response.result != null) {

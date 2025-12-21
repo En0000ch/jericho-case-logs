@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
@@ -104,13 +105,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             offset: const Offset(0, 50),
             onSelected: (value) {
               switch (value) {
-                case 'job_search':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const JobSearchScreen(),
-                    ),
-                  );
-                  break;
                 case 'search_surgeries':
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -127,23 +121,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'job_search',
-                child: Row(
-                  children: [
-                    Image.asset(
-                      'assets/images/opportunity-30.png',
-                      width: 20,
-                      height: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Job Search',
-                      style: TextStyle(color: AppColors.jclGray),
-                    ),
-                  ],
-                ),
-              ),
               PopupMenuItem(
                 value: 'search_surgeries',
                 child: Row(
@@ -370,14 +347,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       _buildActionRow(
                         context,
                         label: 'Update Facilites',
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const SettingsUpdateScreen(
-                                updateType: 'facilities',
+                        onPressed: () async {
+                          // Delay to show glow animation
+                          await Future.delayed(const Duration(milliseconds: 600));
+                          if (mounted) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsUpdateScreen(
+                                  updateType: 'facilities',
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         },
                       ),
                       const SizedBox(height: 14),
@@ -386,14 +367,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       _buildActionRow(
                         context,
                         label: 'Update Surgeons/Doctors',
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const SettingsUpdateScreen(
-                                updateType: 'surgeons',
+                        onPressed: () async {
+                          // Delay to show glow animation
+                          await Future.delayed(const Duration(milliseconds: 600));
+                          if (mounted) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsUpdateScreen(
+                                  updateType: 'surgeons',
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         },
                       ),
                       const SizedBox(height: 14),
@@ -402,14 +387,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       _buildActionRow(
                         context,
                         label: 'Update Skill Set',
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const SettingsUpdateScreen(
-                                updateType: 'skills',
+                        onPressed: () async {
+                          // Delay to show glow animation
+                          await Future.delayed(const Duration(milliseconds: 600));
+                          if (mounted) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsUpdateScreen(
+                                  updateType: 'skills',
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         },
                       ),
                     ],
@@ -491,44 +480,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildActionRow(BuildContext context,
       {required String label, required VoidCallback onPressed}) {
-    return SizedBox(
-      width: 263,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.jclWhite,
-                fontSize: 16,
-              ),
-              textAlign: TextAlign.right,
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 60,
-            height: 35,
-            child: ElevatedButton(
-              onPressed: onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.jclOrange,
-                foregroundColor: AppColors.jclGray,
-                elevation: 0,
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: const BorderSide(
-                    color: Colors.black,
-                    width: 1.0,
-                  ),
-                ),
-              ),
-              child: const Text(''),
-            ),
-          ),
-        ],
-      ),
+    return _DashboardActionButton(
+      label: label,
+      onPressed: onPressed,
     );
   }
 
@@ -603,6 +557,127 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         content: Text(
             'Account deletion: Please visit https://www.jerichocreations.com/contact-us/'),
         duration: Duration(seconds: 5),
+      ),
+    );
+  }
+}
+
+/// Dashboard action button with glow effect on press
+class _DashboardActionButton extends StatefulWidget {
+  final String label;
+  final VoidCallback onPressed;
+
+  const _DashboardActionButton({
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  State<_DashboardActionButton> createState() => _DashboardActionButtonState();
+}
+
+class _DashboardActionButtonState extends State<_DashboardActionButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _glowAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTapDown(TapDownDetails details) {
+    _controller.forward(from: 0.0);
+    HapticFeedback.mediumImpact();
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    widget.onPressed();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 263,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              widget.label,
+              style: const TextStyle(
+                color: AppColors.jclWhite,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTapDown: _handleTapDown,
+            onTapUp: _handleTapUp,
+            child: AnimatedBuilder(
+              animation: _glowAnimation,
+              builder: (context, child) {
+                return Container(
+                  width: 60,
+                  height: 35,
+                  decoration: BoxDecoration(
+                    color: AppColors.jclOrange,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 1.0,
+                    ),
+                    boxShadow: [
+                      // Only show glow when pressed - multiple layers for intensity
+                      if (_glowAnimation.value > 0)
+                        BoxShadow(
+                          color: AppColors.jclOrange.withOpacity(
+                            0.9 * (1 - _glowAnimation.value),
+                          ),
+                          blurRadius: 30 * _glowAnimation.value,
+                          spreadRadius: 6 * _glowAnimation.value,
+                        ),
+                      if (_glowAnimation.value > 0)
+                        BoxShadow(
+                          color: AppColors.jclOrange.withOpacity(
+                            0.6 * (1 - _glowAnimation.value),
+                          ),
+                          blurRadius: 50 * _glowAnimation.value,
+                          spreadRadius: 10 * _glowAnimation.value,
+                        ),
+                      if (_glowAnimation.value > 0)
+                        BoxShadow(
+                          color: AppColors.jclOrange.withOpacity(
+                            0.3 * (1 - _glowAnimation.value),
+                          ),
+                          blurRadius: 70 * _glowAnimation.value,
+                          spreadRadius: 15 * _glowAnimation.value,
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

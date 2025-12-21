@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../../core/themes/app_colors.dart';
+import '../../providers/auth_provider.dart';
 
 /// Report Preview Screen - Displays generated report data with PDF export
-class ReportPreviewScreen extends StatefulWidget {
+class ReportPreviewScreen extends ConsumerStatefulWidget {
   final DateTime startDate;
   final DateTime endDate;
   final List<Map<String, dynamic>> cases;
@@ -22,10 +24,10 @@ class ReportPreviewScreen extends StatefulWidget {
   });
 
   @override
-  State<ReportPreviewScreen> createState() => _ReportPreviewScreenState();
+  ConsumerState<ReportPreviewScreen> createState() => _ReportPreviewScreenState();
 }
 
-class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
+class _ReportPreviewScreenState extends ConsumerState<ReportPreviewScreen> {
   final DateFormat _dateFormat = DateFormat('M/d/yyyy');
 
   @override
@@ -47,7 +49,12 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
         iconTheme: const IconThemeData(color: AppColors.jclWhite),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            icon: Image.asset(
+              'assets/images/sendPDFicon.png',
+              width: 28,
+              height: 28,
+              color: AppColors.jclWhite,
+            ),
             onPressed: _generateAndSharePDF,
             tooltip: 'Share PDF',
           ),
@@ -236,9 +243,11 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
       Navigator.of(context).pop(); // Close loading
 
       // Share the PDF
+      final startDateStr = DateFormat('M-d-yyyy').format(widget.startDate);
+      final endDateStr = DateFormat('M-d-yyyy').format(widget.endDate);
       await Printing.sharePdf(
         bytes: await pdf.save(),
-        filename: 'JCL_Report_${_dateFormat.format(widget.startDate)}_to_${_dateFormat.format(widget.endDate)}.pdf',
+        filename: 'JCL_Report_${startDateStr}_to_$endDateStr.pdf',
       );
     } catch (e) {
       if (!mounted) return;
@@ -263,6 +272,14 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
   Future<pw.Document> _generatePDF() async {
     final pdf = pw.Document();
 
+    // Get user email
+    final user = ref.read(currentUserProvider);
+    final userEmail = user?.email ?? 'N/A';
+
+    // Load font that supports Unicode
+    final font = await PdfGoogleFonts.robotoRegular();
+    final fontBold = await PdfGoogleFonts.robotoBold();
+
     // Load logo if available
     pw.ImageProvider? logoImage;
     try {
@@ -271,6 +288,19 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
     } catch (e) {
       print('Could not load logo: $e');
     }
+
+    // Sort cases newest to oldest (by surgeryDateTime)
+    final sortedCases = List<Map<String, dynamic>>.from(widget.cases);
+    sortedCases.sort((a, b) {
+      final dateA = a['surgeryDateTime'] as DateTime?;
+      final dateB = b['surgeryDateTime'] as DateTime?;
+
+      if (dateA == null && dateB == null) return 0;
+      if (dateA == null) return 1;
+      if (dateB == null) return -1;
+
+      return dateB.compareTo(dateA); // Descending order (newest first)
+    });
 
     pdf.addPage(
       pw.MultiPage(
@@ -292,18 +322,23 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
                       'Jericho Case Logs Report',
                       style: pw.TextStyle(
                         fontSize: 18,
-                        fontWeight: pw.FontWeight.bold,
+                        font: fontBold,
                       ),
                     ),
                     pw.SizedBox(height: 4),
                     pw.Text(
                       '${_dateFormat.format(widget.startDate)} - ${_dateFormat.format(widget.endDate)}',
-                      style: const pw.TextStyle(fontSize: 12),
+                      style: pw.TextStyle(fontSize: 12, font: font),
                     ),
                     pw.SizedBox(height: 2),
                     pw.Text(
-                      'Total Cases: ${widget.cases.length}',
-                      style: const pw.TextStyle(fontSize: 12),
+                      'Total Cases: ${sortedCases.length}',
+                      style: pw.TextStyle(fontSize: 12, font: font),
+                    ),
+                    pw.SizedBox(height: 2),
+                    pw.Text(
+                      'User: $userEmail',
+                      style: pw.TextStyle(fontSize: 12, font: font),
                     ),
                   ],
                 ),
@@ -317,9 +352,9 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
           widgets.add(pw.Divider());
           widgets.add(pw.SizedBox(height: 10));
 
-          // Cases
-          for (var i = 0; i < widget.cases.length; i++) {
-            final caseData = widget.cases[i];
+          // Cases (sorted newest to oldest)
+          for (var i = 0; i < sortedCases.length; i++) {
+            final caseData = sortedCases[i];
             final buffer = StringBuffer();
 
             // Date
@@ -378,7 +413,7 @@ class _ReportPreviewScreenState extends State<ReportPreviewScreen> {
                 ),
                 child: pw.Text(
                   buffer.toString().trim(),
-                  style: const pw.TextStyle(fontSize: 10),
+                  style: pw.TextStyle(fontSize: 10, font: font),
                 ),
               ),
             );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import '../../../core/themes/app_colors.dart';
@@ -32,37 +33,87 @@ class _CMETableScreenState extends ConsumerState<CMETableScreen> {
     final currentYear = DateTime.now().year;
     final years = List.generate(10, (index) => currentYear - index);
 
-    final selectedYear = await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Year'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: years.length,
-            itemBuilder: (context, index) {
-              final year = years[index];
-              return ListTile(
-                title: Text(
-                  year.toString(),
-                  style: const TextStyle(fontSize: 18),
-                ),
-                onTap: () => Navigator.pop(context, year),
-              );
-            },
-          ),
-        ),
-      ),
-    );
+    // Find initial index (default to current year if not set)
+    int initialIndex = _selectedYear != null
+        ? years.indexOf(_selectedYear!)
+        : 0;
+    if (initialIndex == -1) initialIndex = 0;
 
-    if (selectedYear != null) {
-      setState(() {
-        _selectedYear = selectedYear;
-        _hasShownYearPicker = true;
-      });
-      _loadCMEData();
-    }
+    int tempSelectedIndex = initialIndex;
+
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          color: AppColors.jclWhite,
+          child: Column(
+            children: [
+              // Header with Done button
+              Container(
+                height: 50,
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.jclGray, width: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(width: 70),
+                    const Text(
+                      'Select Year',
+                      style: TextStyle(
+                        color: AppColors.jclGray,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    CupertinoButton(
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(color: AppColors.jclOrange),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() {
+                          _selectedYear = years[tempSelectedIndex];
+                          _hasShownYearPicker = true;
+                        });
+                        _loadCMEData();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              // Year picker
+              Expanded(
+                child: CupertinoPicker(
+                  scrollController: FixedExtentScrollController(
+                    initialItem: initialIndex,
+                  ),
+                  itemExtent: 40,
+                  onSelectedItemChanged: (int index) {
+                    tempSelectedIndex = index;
+                  },
+                  children: years.map((year) {
+                    return Center(
+                      child: Text(
+                        year.toString(),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: AppColors.jclGray,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _loadCMEData() async {

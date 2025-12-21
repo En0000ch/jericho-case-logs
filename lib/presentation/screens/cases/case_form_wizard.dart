@@ -5,6 +5,8 @@ import '../../providers/case_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../../domain/entities/case.dart';
+import '../../widgets/glow_button.dart';
+import 'steps/step1_basic_info.dart';
 import 'steps/step2_surgery_selection.dart';
 import 'steps/step3_anesthetic_plan.dart';
 import 'steps/step4_patient_info.dart';
@@ -25,6 +27,7 @@ class CaseFormWizard extends ConsumerStatefulWidget {
 
 class _CaseFormWizardState extends ConsumerState<CaseFormWizard> {
   final List<String> _stepTitles = [
+    'Basic Info',
     'Surgery',
     'Anesthetic Plan',
     'Patient Info',
@@ -60,8 +63,7 @@ class _CaseFormWizardState extends ConsumerState<CaseFormWizard> {
             );
       } else {
         ref.read(caseFormProvider.notifier).reset();
-        // Show date picker for new cases
-        _showDatePicker();
+        // Date selection now handled in Step 1 (Basic Info)
       }
     });
   }
@@ -103,17 +105,19 @@ class _CaseFormWizardState extends ConsumerState<CaseFormWizard> {
   Widget _buildStepContent(int step) {
     switch (step) {
       case 0:
-        return const Step2SurgerySelection();
+        return const Step1BasicInfo();
       case 1:
-        return const Step3AnestheticPlan();
+        return const Step2SurgerySelection();
       case 2:
-        return const Step4PatientInfo();
+        return const Step3AnestheticPlan();
       case 3:
-        return const Step5AdditionalDetails();
+        return const Step4PatientInfo();
       case 4:
+        return const Step5AdditionalDetails();
+      case 5:
         return const Step6Review();
       default:
-        return const Step2SurgerySelection();
+        return const Step1BasicInfo();
     }
   }
 
@@ -151,7 +155,7 @@ class _CaseFormWizardState extends ConsumerState<CaseFormWizard> {
       success = await notifier.updateCase(
         caseId: widget.caseToEdit!.objectId,
         date: data.date,
-        patientAge: data.patientAge,
+        patientAge: data.patientAge?.toString(),
         gender: data.gender,
         asaClassification: data.asaClassification,
         procedureSurgery: data.procedureSurgery,
@@ -162,12 +166,13 @@ class _CaseFormWizardState extends ConsumerState<CaseFormWizard> {
         airwayManagement: data.airwayManagement,
         additionalComments: data.additionalComments,
         complications: data.hasComplications,
+        imageName: data.imageName,
       );
     } else {
       success = await notifier.createCase(
         userEmail: user.email,
         date: data.date,
-        patientAge: data.patientAge,
+        patientAge: data.patientAge?.toString(),
         gender: data.gender,
         asaClassification: data.asaClassification,
         procedureSurgery: data.procedureSurgery ?? '',
@@ -178,6 +183,7 @@ class _CaseFormWizardState extends ConsumerState<CaseFormWizard> {
         airwayManagement: data.airwayManagement,
         additionalComments: data.additionalComments,
         complications: data.hasComplications,
+        imageName: data.imageName,
       );
     }
 
@@ -224,7 +230,8 @@ class _CaseFormWizardState extends ConsumerState<CaseFormWizard> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pop(); // Close wizard
+              // Pop all routes until we're back at the home screen
+              Navigator.of(context).popUntil((route) => route.isFirst);
             },
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
@@ -322,62 +329,50 @@ class _CaseFormWizardState extends ConsumerState<CaseFormWizard> {
             Container(
               color: AppColors.jclGray,
               padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  // Back Button
-                  if (currentStep > 0)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: formState.isSaving
-                            ? null
-                            : () {
+              child: formState.isSaving
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.jclOrange,
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        // Back Button with Glow
+                        if (currentStep > 0)
+                          Expanded(
+                            child: GlowButton(
+                              text: 'Back',
+                              onPressed: () {
                                 ref.read(caseFormProvider.notifier).previousStep();
                               },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: AppColors.jclOrange),
-                          foregroundColor: AppColors.jclOrange,
-                        ),
-                        child: const Text('Back'),
-                      ),
-                    ),
+                              isPrimary: false,
+                              icon: Icons.arrow_back,
+                            ),
+                          ),
 
-                  if (currentStep > 0) const SizedBox(width: 16),
+                        if (currentStep > 0) const SizedBox(width: 16),
 
-                  // Next/Save Button
-                  Expanded(
-                    flex: currentStep == 0 ? 1 : 1,
-                    child: ElevatedButton(
-                      onPressed: formState.isSaving
-                          ? null
-                          : () {
+                        // Next/Save Button with Glow
+                        Expanded(
+                          flex: currentStep == 0 ? 1 : 1,
+                          child: GlowButton(
+                            text: isLastStep
+                                ? (_isEditMode ? 'Update Case' : 'Save Case')
+                                : 'Next',
+                            onPressed: () {
                               if (isLastStep) {
                                 _handleSave();
                               } else {
                                 ref.read(caseFormProvider.notifier).nextStep();
                               }
                             },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: AppColors.jclOrange,
-                        foregroundColor: AppColors.jclWhite,
-                      ),
-                      child: formState.isSaving
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(isLastStep
-                              ? (_isEditMode ? 'Update Case' : 'Save Case')
-                              : 'Next'),
+                            isPrimary: true,
+                            icon: isLastStep ? Icons.save : Icons.arrow_forward,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),

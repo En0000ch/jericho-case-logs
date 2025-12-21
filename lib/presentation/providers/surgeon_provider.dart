@@ -1,26 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/datasources/remote/parse_surgeon_service.dart';
 import '../../data/datasources/local/shared_prefs_service.dart';
+import 'auth_provider.dart';
 
 /// Provider for surgeon service
 final surgeonServiceProvider = Provider<ParseSurgeonService>((ref) {
   return ParseSurgeonService();
-});
-
-/// Provider for SharedPreferences instance
-final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {
-  return await SharedPreferences.getInstance();
-});
-
-/// Provider for shared preferences service
-final sharedPrefsServiceProvider = Provider<SharedPrefsService>((ref) {
-  final prefsAsync = ref.watch(sharedPreferencesProvider);
-  return prefsAsync.when(
-    data: (prefs) => SharedPrefsService(prefs),
-    loading: () => throw Exception('SharedPreferences not initialized'),
-    error: (err, stack) => throw err,
-  );
 });
 
 /// State notifier for managing surgeon list

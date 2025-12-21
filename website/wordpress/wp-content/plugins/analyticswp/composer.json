@@ -1,0 +1,16 @@
+{
+    "require-dev": {
+        "vimeo/psalm": "5.25",
+        "php-stubs/wordpress-stubs": "*",
+        "php-stubs/woocommerce-stubs": "*"
+    },
+    "require": {
+        "matomo/device-detector": "^6.3",
+        "mustache/mustache": "^2.14"
+    },
+    "autoload": {
+        "psr-4": {
+            "AnalyticsWP\\Lib\\": "Lib/"
+        }
+    }
+}

@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../../core/constants/app_constants.dart';
 import 'case_creation_flow_screen.dart';
 import 'case_detail_screen.dart';
+import '../../widgets/marquee_text.dart';
 
 class CaseListScreen extends ConsumerStatefulWidget {
   const CaseListScreen({super.key});
@@ -300,13 +301,19 @@ class _CaseListScreenState extends ConsumerState<CaseListScreen> {
                                     leading: CircleAvatar(
                                       child: Text(caseItem.asaClassification),
                                     ),
-                                    title: Text(
+                                    title: MarqueeText(
                                       caseItem.procedureSurgery,
                                       maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      scrollSpeed: 30,
+                                      pauseInterval: 1.5,
+                                      labelSpacing: 30,
                                     ),
-                                    subtitle: Text(
+                                    subtitle: MarqueeText(
                                       '${DateFormat.yMMMd().format(caseItem.date)} • ${caseItem.anestheticPlan}',
+                                      maxLines: 1,
+                                      scrollSpeed: 24,
+                                      pauseInterval: 1.8,
+                                      labelSpacing: 30,
                                     ),
                                     trailing: const Icon(Icons.chevron_right),
                                     onTap: () {

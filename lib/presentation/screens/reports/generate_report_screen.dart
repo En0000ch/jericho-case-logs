@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/glow_button.dart';
 import 'chart_builder_screen.dart';
 import 'cme_table_screen.dart' show CMETableScreen;
 import 'report_preview_screen.dart';
@@ -126,7 +128,7 @@ class _GenerateReportScreenState extends ConsumerState<GenerateReportScreen> {
           child: Center(
             child: Column(
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 30),
 
                 // Start Date Field
                 SizedBox(
@@ -192,112 +194,77 @@ class _GenerateReportScreenState extends ConsumerState<GenerateReportScreen> {
 
                 const SizedBox(height: 21),
 
-                // Set Date Range Button
-                SizedBox(
-                  width: 160,
-                  height: 40,
-                  child: ElevatedButton(
-                    onPressed: _setDateRange,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.jclOrange,
-                      foregroundColor: AppColors.jclGray,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: const BorderSide(
-                          color: Colors.black,
-                          width: 1.0,
-                        ),
-                      ),
-                    ),
-                    child: const Text(
-                      'Set Date Range',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                // Set Date Range Button with Glow
+                GlowButtonSmall(
+                  text: 'Set Date Range',
+                  onPressed: _setDateRange,
+                  isPrimary: true,
+                  icon: Icons.calendar_today,
                 ),
 
-                const SizedBox(height: 45),
+                const SizedBox(height: 30),
 
                 // Checkboxes Section
                 _buildCheckboxRow('Type of Surgery', _includeSurgeryType, (value) {
                   setState(() => _includeSurgeryType = value ?? false);
                 }),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 _buildCheckboxRow('Primary Anesthetic', _includePrimaryAnesthetic, (value) {
                   setState(() => _includePrimaryAnesthetic = value ?? false);
                 }),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 _buildCheckboxRow('Secondary Anesthetic', _includeSecondaryAnesthetic, (value) {
                   setState(() => _includeSecondaryAnesthetic = value ?? false);
                 }),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 _buildCheckboxRow('Skilled Procedures', _includeSkilledProcedures, (value) {
                   setState(() => _includeSkilledProcedures = value ?? false);
                 }),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 _buildCheckboxRow('Surgeon', _includeSurgeon, (value) {
                   setState(() => _includeSurgeon = value ?? false);
                 }),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 _buildCheckboxRow('Facility', _includeFacility, (value) {
                   setState(() => _includeFacility = value ?? false);
                 }),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
 
                 _buildCheckboxRow('ASA', _includeASA, (value) {
                   setState(() => _includeASA = value ?? false);
                 }),
 
-                const SizedBox(height: 60),
+                const SizedBox(height: 24),
 
-                // Get Report Button
-                SizedBox(
-                  width: 140,
-                  height: 40,
-                  child: ElevatedButton(
-                    onPressed: _isDateRangeSet ? _getReport : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _isDateRangeSet
-                          ? AppColors.jclOrange
-                          : AppColors.jclGray.withOpacity(0.5),
-                      foregroundColor: _isDateRangeSet
-                          ? AppColors.jclWhite
-                          : AppColors.jclGray.withOpacity(0.5),
-                      disabledBackgroundColor: AppColors.jclGray.withOpacity(0.5),
-                      disabledForegroundColor: AppColors.jclGray.withOpacity(0.5),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: BorderSide(
-                          color: _isDateRangeSet ? AppColors.jclWhite : Colors.transparent,
-                          width: 1.0,
-                        ),
-                      ),
-                    ),
-                    child: const Text(
-                      'Get Report',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                // Get Report Button with Glow (only enabled when date range is set)
+                if (_isDateRangeSet)
+                  GlowButtonSmall(
+                    text: 'Get Report',
+                    onPressed: _getReport,
+                    isPrimary: true,
+                    icon: Icons.description,
+                  )
+                else
+                  Opacity(
+                    opacity: 0.5,
+                    child: GlowButtonSmall(
+                      text: 'Get Report',
+                      onPressed: () {}, // Disabled
+                      isPrimary: true,
+                      icon: Icons.description,
                     ),
                   ),
-                ),
 
                 const SizedBox(height: 50),
               ],
@@ -346,61 +313,135 @@ class _GenerateReportScreenState extends ConsumerState<GenerateReportScreen> {
   }
 
   Future<void> _selectStartDate() async {
-    final DateTime? picked = await showDatePicker(
+    DateTime tempDate = _startDate ?? DateTime.now();
+
+    await showCupertinoModalPopup<void>(
       context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.jclOrange,
-              onPrimary: AppColors.jclWhite,
-              onSurface: AppColors.jclGray,
-            ),
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          color: AppColors.jclWhite,
+          child: Column(
+            children: [
+              // Header with Done button
+              Container(
+                height: 50,
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.jclGray, width: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(width: 70),
+                    const Text(
+                      'Start Date',
+                      style: TextStyle(
+                        color: AppColors.jclGray,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    CupertinoButton(
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(color: AppColors.jclOrange),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() {
+                          _startDate = tempDate;
+                          _isDateRangeSet = false;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              // Date picker
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: tempDate,
+                  minimumDate: DateTime(2000),
+                  maximumDate: DateTime.now(),
+                  onDateTimeChanged: (DateTime newDate) {
+                    tempDate = newDate;
+                  },
+                ),
+              ),
+            ],
           ),
-          child: child!,
         );
       },
     );
-
-    if (picked != null && picked != _startDate) {
-      setState(() {
-        _startDate = picked;
-        // Reset date range flag when dates change
-        _isDateRangeSet = false;
-      });
-    }
   }
 
   Future<void> _selectEndDate() async {
-    final DateTime? picked = await showDatePicker(
+    DateTime tempDate = _endDate ?? DateTime.now();
+
+    await showCupertinoModalPopup<void>(
       context: context,
-      initialDate: _endDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.jclOrange,
-              onPrimary: AppColors.jclWhite,
-              onSurface: AppColors.jclGray,
-            ),
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          color: AppColors.jclWhite,
+          child: Column(
+            children: [
+              // Header with Done button
+              Container(
+                height: 50,
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.jclGray, width: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const SizedBox(width: 70),
+                    const Text(
+                      'End Date',
+                      style: TextStyle(
+                        color: AppColors.jclGray,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    CupertinoButton(
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(color: AppColors.jclOrange),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        setState(() {
+                          _endDate = tempDate;
+                          _isDateRangeSet = false;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              // Date picker
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: tempDate,
+                  minimumDate: DateTime(2000),
+                  maximumDate: DateTime.now(),
+                  onDateTimeChanged: (DateTime newDate) {
+                    tempDate = newDate;
+                  },
+                ),
+              ),
+            ],
           ),
-          child: child!,
         );
       },
     );
-
-    if (picked != null && picked != _endDate) {
-      setState(() {
-        _endDate = picked;
-        // Reset date range flag when dates change
-        _isDateRangeSet = false;
-      });
-    }
   }
 
   void _setDateRange() {
@@ -521,7 +562,7 @@ class _GenerateReportScreenState extends ConsumerState<GenerateReportScreen> {
         ..whereEqualTo('userEmail', user.email)
         ..whereGreaterThanOrEqualsTo('dateTime', _startDate)
         ..whereLessThanOrEqualTo('dateTime', _endDate!.add(const Duration(days: 1)))
-        ..orderByAscending('dateTime')
+        ..orderByDescending('dateTime')
         ..setLimit(3000); // Match iOS pagination limit
 
       print('Executing Parse query...');

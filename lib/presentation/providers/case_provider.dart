@@ -236,6 +236,7 @@ class CaseDetailNotifier extends StateNotifier<CaseDetailState> {
     String? airwayManagement,
     String? additionalComments,
     bool? complications,
+    String? imageName,
   }) async {
     state = state.copyWith(isSaving: true, error: null);
 
@@ -253,6 +254,7 @@ class CaseDetailNotifier extends StateNotifier<CaseDetailState> {
       airwayManagement: airwayManagement,
       additionalComments: additionalComments,
       complications: complications,
+      imageName: imageName,
     );
 
     return result.fold(
@@ -282,12 +284,14 @@ class CaseDetailNotifier extends StateNotifier<CaseDetailState> {
     String? asaClassification,
     String? procedureSurgery,
     String? anestheticPlan,
+    String? secondaryAnesthetic,
     List<String>? anestheticsUsed,
     String? surgeryClass,
     String? location,
     String? airwayManagement,
     String? additionalComments,
     bool? complications,
+    String? imageName,
   }) async {
     state = state.copyWith(isSaving: true, error: null);
 
@@ -299,12 +303,14 @@ class CaseDetailNotifier extends StateNotifier<CaseDetailState> {
       asaClassification: asaClassification,
       procedureSurgery: procedureSurgery,
       anestheticPlan: anestheticPlan,
+      secondaryAnesthetic: secondaryAnesthetic,
       anestheticsUsed: anestheticsUsed,
       surgeryClass: surgeryClass,
       location: location,
       airwayManagement: airwayManagement,
       additionalComments: additionalComments,
       complications: complications,
+      imageName: imageName,
     );
 
     return result.fold(

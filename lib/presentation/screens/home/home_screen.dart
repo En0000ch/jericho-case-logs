@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import '../../providers/case_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../../domain/entities/case.dart';
 import '../../../core/themes/app_colors.dart';
+import '../../../core/utils/surgery_image_helper.dart';
 import '../cases/case_creation_flow_screen.dart';
+import '../cases/case_form_wizard.dart';
 import '../cases/case_detail_screen.dart';
+import '../cases/case_edit_screen.dart';
 import '../calendar/calendar_screen.dart';
 import '../settings/settings_screen.dart';
+import '../job_search/job_search_screen.dart';
+import '../../widgets/marquee_text.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -38,21 +46,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   /// Check if user needs onboarding
-  /// Only show onboarding for truly new users (caseCount == 0)
-  /// This prevents onboarding from showing on app reinstall for existing users
+  /// Only show onboarding for truly new users (users with 0 cases in database)
+  /// This prevents onboarding from showing for existing users even after reinstall
   Future<void> _checkOnboardingStatus() async {
     final user = ref.read(currentUserProvider);
+    if (user == null || !mounted) return;
 
-    // Check if user has ever created a case on the server
-    // If caseCount > 0, they're an existing user who has used the app before
-    if (user != null && user.caseCount == 0 && mounted) {
-      final prefs = await SharedPreferences.getInstance();
-      final hasSeenOnboarding = prefs.getBool('jcl_hasSeenOnboarding') ?? false;
+    try {
+      // Query Parse Server to count actual cases for this user
+      final query = QueryBuilder<ParseObject>(ParseObject('jclCases'))
+        ..whereEqualTo('userEmail', user.email)
+        ..setLimit(1); // We only need to know if ANY cases exist
 
-      // Only show onboarding if they haven't seen it yet in this session
-      if (!hasSeenOnboarding) {
-        _showOnboardingAlert();
+      final response = await query.count();
+
+      // Only show onboarding if user has NO cases in the database
+      if (response.success && response.count == 0 && mounted) {
+        final prefs = await SharedPreferences.getInstance();
+        final hasSeenOnboarding = prefs.getBool('jcl_hasSeenOnboarding') ?? false;
+
+        // Only show onboarding if they haven't seen it yet in this session
+        if (!hasSeenOnboarding) {
+          _showOnboardingAlert();
+        }
       }
+    } catch (e) {
+      print('Error checking onboarding status: $e');
+      // On error, don't show onboarding (fail gracefully)
     }
   }
 
@@ -335,24 +355,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _filterByToday(List<Case> allCases) {
-    print('DEBUG HOME: _filterByToday called with ${allCases.length} cases');
+    print('');
+    print('═══════════════════════════════════════════════════════════');
+    print('DEBUG HOME: _filterByToday called');
+    print('DEBUG HOME: Total cases received: ${allCases.length}');
+    print('═══════════════════════════════════════════════════════════');
+
+    if (allCases.isEmpty) {
+      print('⚠️  WARNING: No cases available to display!');
+      setState(() {
+        _displayedCases = [];
+        _isFiltering = false;
+      });
+      return;
+    }
+
     if (allCases.isNotEmpty) {
-      print('DEBUG HOME: First case - objectId=${allCases.first.objectId}, surgery=${allCases.first.procedureSurgery}, date=${allCases.first.date}');
+      print('DEBUG HOME: First case details:');
+      print('  - ObjectId: ${allCases.first.objectId}');
+      print('  - Surgery: ${allCases.first.procedureSurgery}');
+      print('  - Surgery Date: ${allCases.first.date}');
+      print('  - Created At: ${allCases.first.createdAt}');
     }
 
     final now = DateTime.now();
     final twentyFourHoursAgo = now.subtract(const Duration(hours: 24));
-    print('DEBUG HOME: Filtering for cases after $twentyFourHoursAgo');
+    print('');
+    print('Time Reference:');
+    print('  - Current time: $now');
+    print('  - 24 hours ago: $twentyFourHoursAgo');
+    print('');
+    print('Filtering Logic: Looking for cases where createdAt > $twentyFourHoursAgo');
+    print('───────────────────────────────────────────────────────────');
 
     // Find cases entered within the last 24 hours
     final recentCases = allCases.where((caseItem) {
-      final isRecent = caseItem.date.isAfter(twentyFourHoursAgo);
-      print('DEBUG HOME: Case ${caseItem.objectId} date ${caseItem.date}, isRecent: $isRecent');
+      final isRecent = caseItem.createdAt.isAfter(twentyFourHoursAgo);
+      print('Case Check:');
+      print('  - Surgery: ${caseItem.procedureSurgery}');
+      print('  - Surgery Date: ${caseItem.date}');
+      print('  - Created At: ${caseItem.createdAt}');
+      print('  - Is Recent? $isRecent');
+      print('  ---');
       return isRecent;
     }).toList();
 
-    print('DEBUG HOME: Found ${recentCases.length} recent cases');
-    print('DEBUG HOME: Will display ${recentCases.isEmpty ? allCases.length : recentCases.length} cases');
+    print('───────────────────────────────────────────────────────────');
+    print('Filter Results:');
+    print('  - Recent cases (last 24h): ${recentCases.length}');
+    print('  - Total cases available: ${allCases.length}');
+    print('  - Will display: ${recentCases.isEmpty ? "ALL ${allCases.length} CASES" : "ONLY ${recentCases.length} RECENT CASES"}');
+    print('═══════════════════════════════════════════════════════════');
+    print('');
 
     // If any cases in last 24 hours, show only those. Otherwise show ALL cases.
     // Sort by date descending (newest first)
@@ -397,32 +451,232 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _selectStartDate() async {
-    final date = await showDatePicker(
+    DateTime? selectedDate = _startDate ?? DateTime.now();
+
+    await showCupertinoModalPopup(
       context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          color: AppColors.jclWhite,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  CupertinoButton(
+                    child: const Text('Done'),
+                    onPressed: () {
+                      setState(() {
+                        _startDate = selectedDate;
+                        _updateDateFields();
+                      });
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: selectedDate,
+                  minimumDate: DateTime(2000),
+                  maximumDate: DateTime(2100),
+                  onDateTimeChanged: (DateTime newDate) {
+                    selectedDate = newDate;
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
-    if (date != null) {
-      setState(() {
-        _startDate = date;
-        _updateDateFields();
-      });
-    }
   }
 
   Future<void> _selectEndDate() async {
-    final date = await showDatePicker(
+    DateTime? selectedDate = _endDate ?? DateTime.now();
+
+    await showCupertinoModalPopup(
       context: context,
-      initialDate: _endDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          color: AppColors.jclWhite,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: const Text('Cancel'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  CupertinoButton(
+                    child: const Text('Done'),
+                    onPressed: () {
+                      setState(() {
+                        _endDate = selectedDate;
+                        _updateDateFields();
+                      });
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: selectedDate,
+                  minimumDate: DateTime(2000),
+                  maximumDate: DateTime(2100),
+                  onDateTimeChanged: (DateTime newDate) {
+                    selectedDate = newDate;
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
-    if (date != null) {
-      setState(() {
-        _endDate = date;
-        _updateDateFields();
-      });
+  }
+
+  /// Handle duplicate case action
+  Future<void> _handleDuplicate(Case caseItem) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Duplicate Case?'),
+        content: Text(
+          'Are you sure you want to duplicate this case?\n\n${caseItem.procedureSurgery}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.blue,
+            ),
+            child: const Text('Duplicate'),
+          ),
+        ],
+      ),
+    );
+
+    // Only proceed if confirmed
+    if (confirmed != true || !mounted) return;
+
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    final notifier = ref.read(caseDetailProvider.notifier);
+
+    final success = await notifier.createCase(
+      userEmail: user.email,
+      date: caseItem.date,
+      patientAge: caseItem.patientAge?.toString(),
+      gender: caseItem.gender,
+      asaClassification: caseItem.asaClassification,
+      procedureSurgery: caseItem.procedureSurgery,
+      anestheticPlan: caseItem.anestheticPlan,
+      anestheticsUsed: caseItem.anestheticsUsed,
+      surgeryClass: caseItem.surgeryClass,
+      location: caseItem.location,
+      airwayManagement: caseItem.airwayManagement,
+      additionalComments: caseItem.additionalComments,
+      complications: caseItem.complications,
+      imageName: caseItem.imageName,
+    );
+
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Case duplicated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadCases(); // Refresh the list
+      } else {
+        final state = ref.read(caseDetailProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(state.error ?? 'Failed to duplicate case'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Handle edit case action
+  void _handleEdit(Case caseItem) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CaseEditScreen(caseToEdit: caseItem),
+      ),
+    ).then((_) => _loadCases());
+  }
+
+  /// Handle delete case action
+  Future<void> _handleDelete(Case caseItem) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Case?'),
+        content: Text(
+          'Are you sure you want to delete this case?\n\n${caseItem.procedureSurgery}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final user = ref.read(currentUserProvider);
+      if (user == null) return;
+
+      final listNotifier = ref.read(caseListProvider(user.email).notifier);
+      final success = await listNotifier.deleteCase(caseItem.objectId);
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Case deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadCases(); // Refresh the list
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to delete case'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -726,84 +980,112 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             itemBuilder: (context, index) {
                               final caseItem = _displayedCases[index];
-                              return ListTile(
-                                tileColor: AppColors.jclWhite,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                leading: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: caseItem.imageName != null
-                                        ? Image.asset(
-                                            'assets/images/${caseItem.imageName}',
-                                            fit: BoxFit.contain,
-                                            errorBuilder: (context, error, stackTrace) {
-                                              // Last resort - show a generic icon
-                                              return const Icon(
-                                                Icons.medical_services,
-                                                color: AppColors.jclOrange,
-                                                size: 24,
-                                              );
-                                            },
-                                          )
-                                        : const Icon(
-                                            Icons.medical_services,
-                                            color: AppColors.jclOrange,
-                                            size: 24,
-                                          ),
-                                  ),
-                                ),
-                                title: Text(
-                                  caseItem.procedureSurgery,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.jclGray,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              return Slidable(
+                                key: ValueKey(caseItem.objectId),
+                                endActionPane: ActionPane(
+                                  motion: const StretchMotion(),
                                   children: [
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      caseItem.anestheticPlan,
-                                      style: TextStyle(
-                                        color: AppColors.jclGray.withAlpha((255 * 0.7).round()),
-                                        fontSize: 13,
-                                      ),
+                                    SlidableAction(
+                                      onPressed: (_) => _handleDuplicate(caseItem),
+                                      backgroundColor: Colors.blue,
+                                      foregroundColor: Colors.white,
+                                      icon: Icons.content_copy,
+                                      label: 'Duplicate',
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      DateFormat.yMMMd().format(caseItem.date),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.jclGray.withAlpha((255 * 0.5).round()),
-                                      ),
+                                    SlidableAction(
+                                      onPressed: (_) => _handleEdit(caseItem),
+                                      backgroundColor: AppColors.jclOrange,
+                                      foregroundColor: Colors.white,
+                                      icon: Icons.edit,
+                                      label: 'Edit',
+                                    ),
+                                    SlidableAction(
+                                      onPressed: (_) => _handleDelete(caseItem),
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
+                                      icon: Icons.delete,
+                                      label: 'Delete',
                                     ),
                                   ],
                                 ),
-                                trailing: const Icon(
-                                  Icons.chevron_right,
-                                  color: AppColors.jclOrange,
-                                ),
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => CaseDetailScreen(
-                                        caseId: caseItem.objectId,
+                                child: ListTile(
+                                  tileColor: AppColors.jclWhite,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(6.0),
+                                      child: Image.asset(
+                                        SurgeryImageHelper.getAssetPath(caseItem.imageName, surgeryClass: caseItem.surgeryClass),
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Icon(
+                                            Icons.medical_services,
+                                            color: AppColors.jclOrange,
+                                            size: 24,
+                                          );
+                                        },
                                       ),
                                     ),
-                                  ).then((_) => _loadCases());
-                                },
+                                  ),
+                                  title: MarqueeText(
+                                    caseItem.procedureSurgery,
+                                    maxLines: 1,
+                                    scrollSpeed: 30,
+                                    pauseInterval: 1.5,
+                                    labelSpacing: 30,
+                                    style: const TextStyle(
+                                      color: AppColors.jclGray,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 4),
+                                      MarqueeText(
+                                        caseItem.anestheticPlan,
+                                        maxLines: 1,
+                                        scrollSpeed: 24,
+                                        pauseInterval: 1.8,
+                                        labelSpacing: 30,
+                                        style: TextStyle(
+                                          color: AppColors.jclGray.withAlpha((255 * 0.7).round()),
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        DateFormat.yMMMd().format(caseItem.date),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.jclGray.withAlpha((255 * 0.5).round()),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: const Icon(
+                                    Icons.chevron_right,
+                                    color: AppColors.jclOrange,
+                                  ),
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => CaseDetailScreen(
+                                          caseId: caseItem.objectId,
+                                        ),
+                                      ),
+                                    ).then((_) => _loadCases());
+                                  },
+                                ),
                               );
                             },
                           ),
@@ -830,7 +1112,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: _showFeatureComingSoonDialog,
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const JobSearchScreen(),
+                      ),
+                    );
+                  },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     foregroundColor: AppColors.jclGray,
@@ -841,15 +1129,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(
-                        Icons.hotel,
-                        size: 28,
+                    children: [
+                      Image.asset(
+                        'assets/images/nurse-32.png',
+                        width: 28,
+                        height: 28,
                         color: AppColors.jclGray,
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Lodging',
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Jobs',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.jclGray,
@@ -867,29 +1156,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showFeatureComingSoonDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.jclGray,
-        title: const Text(
-          'Feature Coming Soon',
-          style: TextStyle(color: AppColors.jclWhite),
-        ),
-        content: const Text(
-          'The Lodging feature is currently under development and will be available in a future update.',
-          style: TextStyle(color: AppColors.jclWhite),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'OK',
-              style: TextStyle(color: AppColors.jclOrange),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

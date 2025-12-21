@@ -13,6 +13,7 @@ class Step4PatientInfo extends ConsumerStatefulWidget {
 
 class _Step4PatientInfoState extends ConsumerState<Step4PatientInfo> {
   late final TextEditingController _ageController;
+  bool _asaSelected = false; // Track if user has selected an ASA class
 
   @override
   void initState() {
@@ -21,6 +22,10 @@ class _Step4PatientInfoState extends ConsumerState<Step4PatientInfo> {
     _ageController = TextEditingController(
       text: formData.patientAge != null ? formData.patientAge.toString() : '',
     );
+    // E button should be disabled initially for new cases
+    // Only enable if editing an existing case with non-default ASA
+    _asaSelected = false;
+    print('DEBUG INIT: asaClassification="${formData.asaClassification}", _asaSelected=$_asaSelected (E button disabled)');
   }
 
   @override
@@ -218,6 +223,8 @@ class _Step4PatientInfoState extends ConsumerState<Step4PatientInfo> {
                 TextFormField(
                   controller: _ageController,
                   keyboardType: TextInputType.number,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   decoration: InputDecoration(
                     hintText: 'Enter age in years',
                     suffixText: 'years',
@@ -316,30 +323,127 @@ class _Step4PatientInfoState extends ConsumerState<Step4PatientInfo> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: AppConstants.asaClassifications.map((asa) {
-                    final isSelected = formData.asaClassification == asa;
-                    return ChoiceChip(
-                      label: Text('ASA $asa'),
-                      selected: isSelected,
-                      selectedColor: AppColors.jclOrange,
-                      backgroundColor: AppColors.jclGray.withOpacity(0.1),
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? AppColors.jclWhite
-                            : AppColors.jclGray,
-                        fontWeight: FontWeight.w500,
+                  children: [
+                    ...AppConstants.asaClassifications.map((asa) {
+                      // Extract base ASA without E modifier
+                      final baseAsa = formData.asaClassification.split(',').first.trim();
+                      final isSelected = baseAsa == asa;
+                      return ChoiceChip(
+                        label: Text('ASA $asa'),
+                        selected: isSelected,
+                        selectedColor: AppColors.jclOrange,
+                        backgroundColor: AppColors.jclGray.withOpacity(0.1),
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? AppColors.jclWhite
+                              : AppColors.jclGray,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        onSelected: (selected) {
+                          if (selected) {
+                            print('DEBUG ASA SELECTED: ASA $asa selected, setting _asaSelected to true');
+                            // Mark that user has selected an ASA class
+                            setState(() {
+                              _asaSelected = true;
+                            });
+                            // Check if E is currently selected
+                            final hasEmergency = formData.asaClassification.contains(', E');
+                            final newAsa = hasEmergency ? '$asa, E' : asa;
+                            ref
+                                .read(caseFormProvider.notifier)
+                                .updateFormData(
+                                  formData.copyWith(asaClassification: newAsa),
+                                );
+                          }
+                        },
+                      );
+                    }).toList(),
+                    // Emergency modifier chip
+                    if (_asaSelected)
+                      Builder(
+                        builder: (context) {
+                          final baseAsa = formData.asaClassification.split(',').first.trim();
+                          final hasEmergency = formData.asaClassification.contains(', E');
+                          final isSelected = hasEmergency;
+                          print('DEBUG E CHIP BUILD: _asaSelected=$_asaSelected, isSelected=$isSelected');
+
+                          return GestureDetector(
+                            onTap: () {
+                              print('DEBUG E CHIP TAPPED: selected=${!isSelected}');
+                              final newAsa = !isSelected ? '$baseAsa, E' : baseAsa;
+                              ref
+                                  .read(caseFormProvider.notifier)
+                                  .updateFormData(
+                                    formData.copyWith(asaClassification: newAsa),
+                                  );
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected ? const Color.fromRGBO(238, 108, 97, 1.0) : AppColors.jclWhite,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.grey.shade400, width: 1),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.shade600,
+                                    offset: const Offset(0, 3),
+                                    blurRadius: 3.0,
+                                    spreadRadius: 0,
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              child: Text(
+                                'E',
+                                style: TextStyle(
+                                  color: isSelected ? AppColors.jclWhite : AppColors.jclGray,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    else
+                      Builder(
+                        builder: (context) {
+                          print('DEBUG E CHIP: DISABLED - showing grayed out version with shadow');
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.jclWhite,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.grey.shade400, width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.shade600,
+                                  offset: const Offset(0, 3),
+                                  blurRadius: 3.0,
+                                  spreadRadius: 0,
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            child: Text(
+                              'E',
+                              style: TextStyle(
+                                color: AppColors.jclGray.withOpacity(0.5),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      onSelected: (selected) {
-                        if (selected) {
-                          ref
-                              .read(caseFormProvider.notifier)
-                              .updateFormData(
-                                formData.copyWith(asaClassification: asa),
-                              );
-                        }
-                      },
-                    );
-                  }).toList(),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'E = Emergency',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.jclGray.withOpacity(0.7),
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ],
             ),

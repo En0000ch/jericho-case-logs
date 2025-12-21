@@ -1,0 +1,24 @@
+{% import _self as self %}
+
+{% macro globalCssVariable(variable, customCssVariableName) %}
+    {# Skip this variable if it doesn't have a name #}
+    {% if variable and (variable.cssVariableName or customCssVariableName) %}
+        {% set value = variable.value.style|default(variable.value) %}
+
+        {% if variable.type == 'font_family' %}
+          {% set value = process_font(value) %}
+        {% endif %}
+
+        {% if variable.type == 'color' %}
+          {% if value.value %}
+              {% set value = value.value %}
+          {% endif %}
+        {% endif %}
+
+        {% if variable.type == 'image_url' and value %}
+          {% set value = 'url(' ~ value ~ ')' %}
+        {% endif %}
+
+        --{{ customCssVariableName|default(variable.cssVariableName) }}: {{ value }};
+    {% endif %}
+{% endmacro %}

@@ -246,6 +246,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       },
     );
   }
+
+  /// Request password reset email
+  Future<bool> requestPasswordReset(String email) async {
+    try {
+      final result = await _authRepository.requestPasswordReset(email);
+      return result.fold(
+        (failure) => false,
+        (success) => success,
+      );
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 /// Auth State Provider

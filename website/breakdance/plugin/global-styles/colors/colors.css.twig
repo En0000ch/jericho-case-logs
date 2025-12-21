@@ -1,0 +1,30 @@
+{% if isBaseBreakpoint %}
+
+{# Main Body Styles #}
+{{ builderPrefix|default('body') }} {
+    background-color: var(--bde-background-color);
+    color: var(--bde-body-text-color);
+}
+
+{{ builderPrefix }} h1,
+{{ builderPrefix }} h2,
+{{ builderPrefix }} h3,
+{{ builderPrefix }} h4,
+{{ builderPrefix }} h5,
+{{ builderPrefix }} h6 {
+    color: var(--bde-headings-color);
+}
+
+{{ builderPrefix }} a,
+.button-atom--text {
+    color: var(--bde-links-color);
+}
+
+{{ builderPrefix }} a:hover,
+.button-atom--text:hover {
+    color: var(--bde-links-color-hover);
+}
+
+{% endif %}
+
+

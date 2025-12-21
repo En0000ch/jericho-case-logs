@@ -1,18 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../../domain/entities/surgery_specialty.dart';
+import '../../providers/surgery_provider.dart';
 import 'surgeries_list_screen.dart';
 
 /// Surgeries Selection Screen
 /// Flutter equivalent of iOS surgeriesViewController
 /// Displays a grid of surgery specialty categories
-class SurgeriesSelectionScreen extends StatelessWidget {
+class SurgeriesSelectionScreen extends ConsumerStatefulWidget {
   const SurgeriesSelectionScreen({super.key});
 
   @override
+  ConsumerState<SurgeriesSelectionScreen> createState() =>
+      _SurgeriesSelectionScreenState();
+}
+
+class _SurgeriesSelectionScreenState
+    extends ConsumerState<SurgeriesSelectionScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load surgeries when screen is first displayed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(surgeryProvider.notifier).loadSurgeries();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final surgeryState = ref.watch(surgeryProvider);
+    final specialties = surgeryState.getSurgerySpecialties();
+
     return Scaffold(
-      backgroundColor: AppColors.jclWhite,
+      backgroundColor: AppColors.jclGray.withOpacity(0.9),
       appBar: AppBar(
         title: const Text(
           'Select Surgery Specialty',
@@ -27,34 +48,44 @@ class SurgeriesSelectionScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.jclWhite),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 1.0,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 30,
-          ),
-          itemCount: SurgerySpecialties.all.length,
-          itemBuilder: (context, index) {
-            final specialty = SurgerySpecialties.all[index];
-            return _SurgerySpecialtyCard(
-              specialty: specialty,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SurgeriesListScreen(
-                      specialty: specialty,
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ),
+      body: surgeryState.isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.jclOrange),
+            )
+          : Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 1.0,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 30,
+                ),
+                itemCount: specialties.length,
+                itemBuilder: (context, index) {
+                  final specialty = specialties[index];
+                  return _SurgerySpecialtyCard(
+                    specialty: specialty,
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SurgeriesListScreen(
+                            specialty: specialty,
+                          ),
+                        ),
+                      );
+
+                      // If a surgery was selected, pass it back to the previous screen
+                      if (result != null && mounted) {
+                        Navigator.pop(context, result);
+                      }
+                    },
+                  );
+                },
+              ),
+            ),
     );
   }
 }
@@ -89,18 +120,27 @@ class _SurgerySpecialtyCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Surgery icon/image
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: AppColors.jclOrange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Icon(
-                _getIconForSpecialty(specialty.title),
-                size: 32,
-                color: AppColors.jclOrange,
-              ),
+            Image.asset(
+              'assets/images/${specialty.imageName}',
+              width: 80,
+              height: 80,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to icon if image not found
+                return Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.jclOrange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Icon(
+                    _getIconForSpecialty(specialty.title),
+                    size: 32,
+                    color: AppColors.jclOrange,
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             // Surgery specialty title

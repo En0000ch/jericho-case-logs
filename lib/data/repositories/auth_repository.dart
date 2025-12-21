@@ -266,4 +266,22 @@ class AuthRepository implements IAuthRepository {
       );
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> requestPasswordReset(String email) async {
+    try {
+      final user = ParseUser(null, null, email);
+      final response = await user.requestPasswordReset();
+
+      if (response.success) {
+        return const Right(true);
+      } else {
+        return Left(
+          ServerFailure(response.error?.message ?? 'Failed to send reset email'),
+        );
+      }
+    } catch (e) {
+      return Left(ServerFailure('Password reset error: ${e.toString()}'));
+    }
+  }
 }

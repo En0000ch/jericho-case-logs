@@ -1,0 +1,382 @@
+#visody_viewer_metabox-tabs,
+#visody_template_metabox-tabs {
+	margin: 2em 0 0.8em;
+}
+
+#visody_viewer_metabox-tabs li,
+#visody_template_metabox-tabs li {
+	padding: 0.9em;
+}
+
+#visody_viewer_metabox-tabs li a:focus,
+#visody_template_metabox-tabs li a:focus {
+	outline: 0;
+	-webkit-box-shadow: unset;
+	        box-shadow: unset;
+}
+
+.dashicons-visody:after {
+	content: '';
+}
+
+.vsd-file-upload-button {
+	display: inline-block;
+	outline: 0;
+}
+
+.vsd-file-upload-button:focus {
+	-webkit-box-shadow: unset;
+	        box-shadow: unset;
+}
+
+.vsd-file-upload .thumbnail {
+	display: none;
+}
+
+.vsd-file-upload.remove .thumbnail {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-align: center;
+	    -ms-flex-align: center;
+	        align-items: center;
+	background: rgba(255, 255, 255, 0.8);
+	border: 1px solid #ddd;
+	gap: 20px;
+}
+
+.vsd-file-upload .details {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	    -ms-flex-direction: column;
+	        flex-direction: column;
+}
+
+.vsd-file-upload .details-title {
+	font-weight: 700;
+}
+
+.vsd-file-upload.remove .thumbnail img {
+	width: 50px;
+	height: 50px;
+	-o-object-position: center;
+	   object-position: center;
+	-o-object-fit: contain;
+	   object-fit: contain;
+	background-color: #f0f0f1;
+}
+
+.vsd-file-upload.remove {
+	color: #3c434a;
+}
+
+.vsd-file-upload.remove a {
+	display: inline-block;
+	outline: 0;
+	color: #b32d2e;
+}
+
+.vsd-file-upload .error {
+	color: #b32d2e;
+	padding: 0;
+}
+
+/* Admin menu */
+
+.menu-icon-visody_viewer .wp-submenu a[href*="page=welcome"] {
+	display: none !important;
+}
+
+/* Admin Page Header */
+
+.visody-admin-header {
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-align: center;
+	    -ms-flex-align: center;
+	        align-items: center;
+	-webkit-box-pack: justify;
+	    -ms-flex-pack: justify;
+	        justify-content: space-between;
+	background: #fff;
+	margin-left: -10px;
+	padding: 10px;
+}
+@media (min-width: 783px) {
+	.visody-admin-header {
+		margin-left: -20px;
+		padding: 10px 20px;
+	}
+}
+.visody-admin-logo {
+	display: inline-block;
+	vertical-align: middle;
+	text-decoration: none;
+	color: #000;
+}
+.visody-admin-logo:hover,
+.visody-admin-logo:focus {
+	-webkit-box-shadow: none;
+	        box-shadow: none;
+}
+.visody-admin-logo img {
+	display: inline-block;
+	vertical-align: middle;
+	width: 36px;
+	height: 36px;
+}
+.visody-admin-logo span {
+	display: inline-block;
+	vertical-align: middle;
+	font-size: 16px;
+	font-weight: 300;
+	margin-left: 5px;
+}
+@media (max-width: 600px) {
+	.visody-admin-header {
+		display: none;
+	}
+}
+.visody-admin-header .visody-admin-actions {
+	display: inline-block;
+	vertical-align: middle;
+	padding-left: 20px;
+}
+@media (max-width: 699px) {
+	.visody-admin-header .visody-admin-actions {
+		display: none;
+	}
+}
+.visody-admin-header .visody-admin-actions,
+.visody-admin-header .visody-admin-actions li {
+	margin: 0;
+	display: inline-block;
+}
+.visody-admin-header .visody-admin-actions a {
+	display: block;
+	position: relative;
+	margin-right: 10px;
+	padding: 10px;
+	border-radius: 4px;
+	font-size: 14px;
+	text-decoration: none;
+	background-color: #f0f0f1;
+	color: #000;
+}
+.visody-admin-header .visody-admin-actions a:hover,
+.visody-admin-header .visody-admin-actions a:focus {
+	-webkit-box-shadow: none;
+	        box-shadow: none;
+	background-color: #ddd;
+}
+.visody-admin-header .visody-admin-actions a.active {
+	color: #fff;
+	background-color: #000;
+}
+.visody-admin-header .visody-admin-actions a.buy-button {
+	background-color: #36b228;
+	color: #fff;
+}
+.visody-admin-header .visody-version {
+	display: inline-block;
+	padding: 8px;
+	border-radius: 4px;
+	font-size: 14px;
+	text-decoration: none;
+	border: 2px solid #ddd;
+	color: #000;
+}
+
+/*
+Welcome page
+*/
+.visody-welcome-page {
+	max-width: 1100px;
+	margin: 40px auto;
+}
+
+.visody-welcome-header {
+	padding: 40px;
+	background-color: #fff;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	gap: 40px;
+	margin-bottom: 60px;
+}
+
+.visody-welcome-header p {
+	font-weight: 700;
+	margin: 0;
+}
+.visody-welcome-header p.links {
+	margin-top: 18px;
+	font-weight: 300;
+}
+.visody-welcome-header p.links .separator {
+	margin: 0 10px;
+}
+
+.visody-welcome-header .h1 {
+	font-size: 30px;
+	font-weight: 400;
+	margin-bottom: 5px;
+}
+
+.visody-welcome-page .visody-version {
+	-webkit-box-flex: 1;
+	    -ms-flex: 1;
+	        flex: 1;
+	font-size: 15px;
+	text-align: right;
+}
+
+.visody-welcome-page h2 {
+	font-size: 26px;
+	line-height: 38px;
+	color: #000;
+}
+
+.visody-welcome-page h3 {
+	font-size: 24px;
+	line-height: 34px;
+	color: #000;
+}
+
+.visody-welcome-page h4 {
+	font-size: 21px;
+	line-height: 30px;
+	color: #000;
+}
+
+.visody-welcome-page p {
+	font-size: 16px;
+	line-height: 28px;
+}
+
+.visody-welcome-page a {
+	color: #36b228;
+	font-size: 18px;
+}
+
+.visody-welcome-step {
+	padding: 40px;
+	margin-bottom: 40px;
+	background-color: #fff;
+	gap: 40px;
+}
+.visody-welcome-step a {
+	text-decoration: none;
+	display: inline-block;
+	font-weight: 700;
+	color: #fff;
+	padding: 10px 25px;
+	font-size: 16px;
+	line-height: 28px;
+	margin-top: 20px;
+	border-radius: 5px;
+	background-color: #36b228;
+}
+.visody-welcome-step a:hover,
+.visody-welcome-step a:focus {
+	background-color: #29a01b;
+}
+.visody-welcome-step-text {
+	-webkit-box-flex: 0;
+	    -ms-flex: 0 0 100%;
+	        flex: 0 0 100%;
+}
+.visody-welcome-step-image img {
+	margin-top: 20px;
+	max-width: 100%;
+	height: auto;
+}
+
+@media (min-width: 1024px) {
+	.visody-welcome-step {
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		-webkit-box-align: center;
+		    -ms-flex-align: center;
+		        align-items: center;
+	}
+	.visody-welcome-step-text {
+		-webkit-box-flex: 0;
+		    -ms-flex: 0 0 40%;
+		        flex: 0 0 40%;
+	}
+	.visody-welcome-step-image img {
+		margin-top: 0;
+	}
+}
+
+.visody-welcome-step-columns {
+	position: relative;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-ms-flex-wrap: wrap;
+	    flex-wrap: wrap;
+	-webkit-box-pack: justify;
+	    -ms-flex-pack: justify;
+	        justify-content: space-between;
+	padding: 40px;
+	margin-bottom: 40px;
+	background-color: #fff;
+}
+
+.visody-welcome-step-columns > h3 {
+	margin: 0;
+}
+.visody-welcome-step-half-col {
+	-webkit-box-flex: 0;
+	    -ms-flex: 0 0 100%;
+	        flex: 0 0 100%;
+	display: block;
+	-webkit-box-sizing: border-box;
+	        box-sizing: border-box;
+	padding: 0;
+	margin-bottom: 0;
+}
+.visody-welcome-step-half-col img {
+	margin-top: 20px;
+}
+.visody-welcome-step-half-col .visody-welcome-step-text {
+	-webkit-box-flex: 0;
+	    -ms-flex: 0 0 100%;
+	        flex: 0 0 100%;
+}
+
+@media (min-width: 1024px) {
+	.visody-welcome-step-columns:after {
+		content: '';
+		position: absolute;
+		display: block;
+		top: 140px;
+		bottom: 60px;
+		width: 1px;
+		left: 50%;
+		-webkit-transform: translateX(-50%);
+		    -ms-transform: translateX(-50%);
+		        transform: translateX(-50%);
+		background-color: #ccc;
+	}
+	.visody-welcome-step-half-col img {
+		margin-top: 40px;
+	}
+	.visody-welcome-step-columns > h3 {
+		-webkit-box-flex: 0;
+		    -ms-flex: 0 0 100%;
+		        flex: 0 0 100%;
+	}
+	.visody-welcome-step-half-col {
+		-webkit-box-flex: 0;
+		    -ms-flex: 0 0 46%;
+		        flex: 0 0 46%;
+	}
+}

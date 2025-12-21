@@ -20,6 +20,7 @@ class ParseCaseService {
     String? airwayManagement,
     String? additionalComments,
     bool? complications,
+    String? imageName,
   }) async {
     final caseObject = ParseObject(_className)
       ..set('userEmail', userEmail)
@@ -40,6 +41,7 @@ class ParseCaseService {
       caseObject.set('additionalComments', additionalComments);
     }
     if (complications != null) caseObject.set('complications', complications);
+    if (imageName != null) caseObject.set('imageName', imageName);
 
     return await caseObject.save();
   }
@@ -70,12 +72,14 @@ class ParseCaseService {
     String? asaClassification,
     String? procedureSurgery,
     String? anestheticPlan,
+    String? secondaryAnesthetic,
     List<String>? anestheticsUsed,
     String? surgeryClass,
     String? location,
     String? airwayManagement,
     String? additionalComments,
     bool? complications,
+    String? imageName,
   }) async {
     final caseObject = ParseObject(_className)..objectId = caseId;
 
@@ -91,6 +95,11 @@ class ParseCaseService {
     if (anestheticPlan != null) {
       caseObject.set('anestheticPlan', anestheticPlan);
     }
+    // iOS app uses 'secPlan' field for secondary anesthetic
+    if (secondaryAnesthetic != null) {
+      caseObject.set('secPlan', secondaryAnesthetic);
+      caseObject.set('secondaryAnesthetic', secondaryAnesthetic); // Keep for Flutter compatibility
+    }
     if (anestheticsUsed != null) {
       caseObject.set('anestheticsUsed', anestheticsUsed);
     }
@@ -103,6 +112,7 @@ class ParseCaseService {
       caseObject.set('additionalComments', additionalComments);
     }
     if (complications != null) caseObject.set('complications', complications);
+    if (imageName != null) caseObject.set('imageName', imageName);
 
     return await caseObject.save();
   }
@@ -157,5 +167,17 @@ class ParseCaseService {
       ..whereEqualTo('userEmail', userEmail);
 
     return await query.count();
+  }
+
+  /// Get saved surgeries for a user
+  /// Returns a list of custom surgeries saved by the user
+  static Future<ParseResponse> getSavedSurgeries(String userEmail) async {
+    final query = QueryBuilder<ParseObject>(
+      ParseObject(ApiConstants.savedSurgeriesClass),
+    )
+      ..whereEqualTo('userEmail', userEmail)
+      ..orderByAscending('subSurgery');
+
+    return await query.query();
   }
 }

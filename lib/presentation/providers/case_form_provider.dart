@@ -10,6 +10,7 @@ class CaseFormData {
   // Step 2: Surgery
   String? surgeryClass;
   String? procedureSurgery;
+  String? imageName; // Image determined by surgeryClass
 
   // Step 3: Anesthetic Plans
   String? anestheticPlan;
@@ -31,6 +32,7 @@ class CaseFormData {
     this.surgeon,
     this.surgeryClass,
     this.procedureSurgery,
+    this.imageName,
     this.anestheticPlan,
     List<String>? anestheticsUsed,
     this.patientAge,
@@ -50,6 +52,7 @@ class CaseFormData {
     String? surgeon,
     String? surgeryClass,
     String? procedureSurgery,
+    String? imageName,
     String? anestheticPlan,
     List<String>? anestheticsUsed,
     int? patientAge,
@@ -65,6 +68,7 @@ class CaseFormData {
       surgeon: surgeon ?? this.surgeon,
       surgeryClass: surgeryClass ?? this.surgeryClass,
       procedureSurgery: procedureSurgery ?? this.procedureSurgery,
+      imageName: imageName ?? this.imageName,
       anestheticPlan: anestheticPlan ?? this.anestheticPlan,
       anestheticsUsed: anestheticsUsed ?? this.anestheticsUsed,
       patientAge: patientAge ?? this.patientAge,

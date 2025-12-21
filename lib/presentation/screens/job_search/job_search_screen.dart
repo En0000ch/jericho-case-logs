@@ -181,6 +181,8 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
                 color: AppColors.jclOrange,
                 child: TextField(
                   controller: _searchController,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   style: const TextStyle(color: AppColors.jclWhite),
                   decoration: InputDecoration(
                     hintText: 'Search jobs...',
