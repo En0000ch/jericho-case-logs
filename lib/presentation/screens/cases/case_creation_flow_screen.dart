@@ -1225,7 +1225,12 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
           _primaryAnesthesia = result;
         }
       });
-      await _showAgePicker();
+      // If this is primary anesthesia, ask about secondary plan
+      if (!isSecondary) {
+        await _checkSecondaryPlanAlert();
+      } else {
+        await _showAgePicker();
+      }
     } else if (mounted) {
       // User exited without confirming, go back
       Navigator.of(context).pop();
@@ -3106,7 +3111,8 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
 
   /// iOS chooseFacilityList: equivalent - Show facility selection dialog
   void chooseFacilityList() {
-    final facilities = ref.read(facilityProvider).facilities.map((f) => f.name).toList();
+    final asyncValue = ProviderScope.containerOf(context).read(facilityProvider);
+    final facilities = asyncValue.asData?.value ?? [];
 
     showDialog(
       context: context,
@@ -3140,7 +3146,8 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
 
   /// iOS chooseSurgeonList: equivalent - Show surgeon selection dialog
   void chooseSurgeonList() {
-    final surgeons = ref.read(surgeonProvider).surgeons.map((s) => s.name).toList();
+    final asyncValue = ProviderScope.containerOf(context).read(surgeonProvider);
+    final surgeons = asyncValue.asData?.value ?? [];
 
     showDialog(
       context: context,

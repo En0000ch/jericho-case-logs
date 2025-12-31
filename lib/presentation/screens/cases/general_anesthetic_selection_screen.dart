@@ -249,15 +249,30 @@ class _GeneralAnestheticSelectionScreenState
           ),
           ElevatedButton(
             onPressed: () {
-              // Format the return string based on TIVA flag
+              // Match iOS logic exactly based on database format
+              // Single item: "Gen. Anesthetic - Item" (no comma)
+              // Multiple items: "Gen. Anesthetic - Item1, Item2"
               String formattedResult;
               if (widget.isTIVA) {
-                formattedResult = 'TIVA';
-                if (_selectedItems.isNotEmpty) {
-                  formattedResult += ' - ${_selectedItems.join(', ')}';
+                // TIVA mode: always start with "TIVA"
+                if (_selectedItems.isEmpty) {
+                  formattedResult = 'TIVA';
+                } else if (_selectedItems.length == 1) {
+                  formattedResult = 'TIVA - ${_selectedItems.first}';
+                } else {
+                  formattedResult = 'TIVA - ${_selectedItems.join(', ')}';
                 }
               } else {
-                formattedResult = 'Gen. Anesthetic - ${_selectedItems.join(', ')}';
+                // General Anesthetic mode
+                if (_selectedItems.isEmpty) {
+                  formattedResult = 'Gen. Anesthetic - ';
+                } else if (_selectedItems.length == 1) {
+                  // Single selection: "Gen. Anesthetic - Item"
+                  formattedResult = 'Gen. Anesthetic - ${_selectedItems.first}';
+                } else {
+                  // Multiple selections: "Gen. Anesthetic - Item1, Item2"
+                  formattedResult = 'Gen. Anesthetic - ${_selectedItems.join(', ')}';
+                }
               }
 
               Navigator.of(context).pop(); // Close dialog
