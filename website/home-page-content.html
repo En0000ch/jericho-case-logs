@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jericho Case Logs - Home Page Content</title>
+    <meta charset="UTF-8">
+    <style>
+        /* Styling for preview - remove when copying to WordPress */
+        body { font-family: 'Century Gothic', Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .hero { background: linear-gradient(135deg, #EE6C4D 0%, #d95d3d 100%); color: white; padding: 80px 40px; text-align: center; border-radius: 12px; margin-bottom: 60px; }
+        .hero h1 { font-size: 48px; margin: 0 0 20px 0; }
+        .hero p { font-size: 24px; margin: 0 0 30px 0; opacity: 0.95; }
+        .cta-button { display: inline-block; background: white; color: #EE6C4D; padding: 16px 40px; font-size: 18px; font-weight: bold; border-radius: 8px; text-decoration: none; transition: transform 0.2s; }
+        .cta-button:hover { transform: scale(1.05); }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 60px 0; }
+        .feature-card { background: #f9f9f9; padding: 40px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .feature-card h3 { color: #EE6C4D; font-size: 24px; margin: 0 0 15px 0; }
+        .feature-card p { color: #333; line-height: 1.6; }
+        .feature-icon { font-size: 48px; margin-bottom: 20px; }
+        .section-title { text-align: center; font-size: 36px; color: #333; margin: 60px 0 40px 0; }
+        .professionals { background: #fff5f3; padding: 60px 40px; border-radius: 12px; margin: 60px 0; }
+        .professionals h2 { text-align: center; color: #EE6C4D; font-size: 36px; margin-bottom: 40px; }
+        .professional-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+        .professional-card { background: white; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .professional-card h4 { color: #EE6C4D; font-size: 22px; margin: 15px 0 10px 0; }
+        .professional-card .status { font-size: 14px; font-weight: bold; padding: 8px 16px; border-radius: 20px; display: inline-block; margin-top: 10px; }
+        .status.available { background: #4CAF50; color: white; }
+        .status.coming-soon { background: #FFC107; color: #333; }
+        .app-showcase { background: linear-gradient(135deg, #293241 0%, #3d5a80 100%); color: white; padding: 80px 40px; border-radius: 12px; margin: 60px 0; text-align: center; }
+        .app-showcase h2 { font-size: 36px; margin-bottom: 20px; }
+        .app-showcase p { font-size: 18px; line-height: 1.8; max-width: 800px; margin: 0 auto 30px auto; }
+        .download-buttons { display: flex; gap: 20px; justify-content: center; margin-top: 30px; }
+        .download-button { display: inline-flex; align-items: center; gap: 10px; background: white; color: #293241; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: transform 0.2s; }
+        .download-button:hover { transform: scale(1.05); }
+        .download-button.disabled { opacity: 0.5; cursor: not-allowed; }
+        .download-button.disabled:hover { transform: none; }
+        .store-badge { height: 50px; }
+    </style>
+</head>
+<body>
+
+<!-- ============================================ -->
+<!-- HERO SECTION -->
+<!-- ============================================ -->
+<div class="hero">
+    <h1>Your Career Command Center</h1>
+    <p>Track cases, advance your skills, and discover opportunities — all in one powerful app</p>
+    <a href="#download" class="cta-button">Download Free App</a>
+</div>
+
+<!-- ============================================ -->
+<!-- WHO IT'S FOR SECTION -->
+<!-- ============================================ -->
+<div class="professionals">
+    <h2>Built for Traveling Medical Professionals</h2>
+    <div class="professional-grid">
+        <div class="professional-card">
+            <div class="feature-icon">💉</div>
+            <h4>CRNAs & Anesthesia Professionals</h4>
+            <p>Comprehensive case logging with detailed anesthetic tracking</p>
+            <span class="status available">✓ Available Now</span>
+        </div>
+        <div class="professional-card">
+            <div class="feature-icon">🩺</div>
+            <h4>Nurses</h4>
+            <p>Track your clinical cases and build your professional portfolio</p>
+            <span class="status available">✓ Available Now</span>
+        </div>
+        <div class="professional-card">
+            <div class="feature-icon">⚕️</div>
+            <h4>Scrub Techs</h4>
+            <p>Document surgical cases and maintain your case log</p>
+            <span class="status coming-soon">Coming Soon</span>
+        </div>
+        <div class="professional-card">
+            <div class="feature-icon">👨‍⚕️</div>
+            <h4>Physicians</h4>
+            <p>Manage patient cases and clinical documentation</p>
+            <span class="status coming-soon">Coming Soon</span>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- FEATURES SECTION -->
+<!-- ============================================ -->
+<h2 class="section-title">Everything You Need to Advance Your Career</h2>
+
+<div class="features">
+    <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Intelligent Case Logging</h3>
+        <p>Quickly document cases with smart forms designed specifically for medical professionals. Track procedures, patient demographics, anesthetic techniques, and outcomes with ease.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Visual Analytics & Reports</h3>
+        <p>See your experience at a glance with beautiful charts and graphs. Generate professional reports for credentialing, CME tracking, or performance reviews in seconds.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Medical Job Search</h3>
+        <p>Discover travel nursing, CRNA, and locum opportunities across the country. Filter by location, pay, facility type, and more to find your perfect next assignment.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Calendar & Schedule Management</h3>
+        <p>Keep track of your work schedule, assignments, and important dates. Sync with your device calendar and never miss a shift or deadline.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">🏥</div>
+        <h3>Facility & Surgeon Database</h3>
+        <p>Build your own database of facilities and surgeons you've worked with. Quickly add them to new cases and maintain your professional network.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Works Offline</h3>
+        <p>Log cases even without internet connection. Your data automatically syncs when you're back online, so you never lose your work.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>HIPAA-Compliant & Secure</h3>
+        <p>Your data is encrypted and stored securely in the cloud. We take patient privacy seriously and never store identifiable patient information.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">📄</div>
+        <h3>Export & Share Reports</h3>
+        <p>Generate professional PDF reports for credentialing applications, CME submissions, or performance reviews. Share directly from the app or save to your device.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Skill Tracking</h3>
+        <p>Monitor your progress across specific procedures and techniques. Set goals and watch your expertise grow over time with detailed analytics.</p>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- APP SHOWCASE SECTION -->
+<!-- ============================================ -->
+<div class="app-showcase">
+    <h2>Download the App Today</h2>
+    <p>Join thousands of medical professionals who are taking control of their careers with Jericho Case Logs. Available for iPhone and iPad.</p>
+    <p><strong>100% Free</strong> • No Ads • No Hidden Fees</p>
+    <div class="download-buttons">
+        <a href="https://apps.apple.com/us/app/jericho-case-logs/id6466726836" target="_blank" class="download-button">
+            <span style="font-size: 24px;">🍎</span>
+            <span>Download on App Store</span>
+        </a>
+        <!-- TODO: Add Google Play pre-registration URL when ready -->
+        <a href="#" class="download-button disabled" onclick="return false;">
+            <span style="font-size: 24px;">📱</span>
+            <span>Google Play (Coming Soon)</span>
+        </a>
+    </div>
+
+    <!-- Alternative: Use official store badges (recommended for production) -->
+    <!--
+    <div class="download-buttons" style="flex-direction: column;">
+        <a href="https://apps.apple.com/us/app/jericho-case-logs/id6466726836" target="_blank">
+            <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" class="store-badge">
+        </a>
+        <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" class="store-badge" style="opacity: 0.5;">
+        <p style="font-size: 12px; margin-top: 10px; opacity: 0.7;">Google Play coming soon</p>
+    </div>
+    -->
+</div>
+
+<!-- ============================================ -->
+<!-- BENEFITS SECTION -->
+<!-- ============================================ -->
+<h2 class="section-title">Why Medical Professionals Choose Jericho Case Logs</h2>
+
+<div class="features">
+    <div class="feature-card">
+        <h3>🎓 Perfect for Credentialing</h3>
+        <p>Generate reports that meet credentialing requirements for hospitals and agencies. Show your experience with professional, detailed case logs.</p>
+    </div>
+
+    <div class="feature-card">
+        <h3>⏱️ Save Hours Every Week</h3>
+        <p>Stop using spreadsheets or paper logs. Our smart forms and auto-fill features cut your documentation time in half.</p>
+    </div>
+
+    <div class="feature-card">
+        <h3>💼 Advance Your Career</h3>
+        <p>Track your professional growth, discover new opportunities, and showcase your skills to potential employers with comprehensive analytics.</p>
+    </div>
+
+    <div class="feature-card">
+        <h3>🌟 Built by Medical Professionals</h3>
+        <p>Designed with input from CRNAs, nurses, and other healthcare professionals who understand what you need to succeed.</p>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- FINAL CTA SECTION -->
+<!-- ============================================ -->
+<div class="hero" id="download" style="margin-top: 80px;">
+    <h2 style="font-size: 36px; margin-bottom: 20px;">Ready to Take Control of Your Career?</h2>
+    <p style="font-size: 18px; margin-bottom: 30px;">Download Jericho Case Logs today and start building your professional future.</p>
+    <a href="https://apps.apple.com/us/app/jericho-case-logs/id6466726836" target="_blank" class="cta-button">Get Started Free on iOS</a>
+    <p style="font-size: 14px; margin-top: 20px; opacity: 0.9;">Available on iOS • Android coming soon</p>
+</div>
+
+<!-- ============================================ -->
+<!-- INSTRUCTIONS FOR WORDPRESS -->
+<!-- ============================================ -->
+<!--
+    IMPLEMENTATION INSTRUCTIONS:
+
+    1. Log into WordPress Admin
+    2. Go to Pages → Add New (or edit existing home page)
+    3. If using Breakdance:
+       - Click "Edit with Breakdance"
+       - Copy sections from this file and paste into Breakdance builder
+       - Adjust styling using Breakdance's visual editor
+
+    4. If using Block Editor:
+       - Switch to "Code Editor" mode
+       - Copy and paste the HTML sections you want
+       - Style using WordPress blocks or custom CSS
+
+    5. Store Links (Already Updated):
+       - ✅ App Store: https://apps.apple.com/us/app/jericho-case-logs/id6466726836
+       - Google Play: See instructions below for pre-registration setup
+       - Add actual app screenshots
+       - Link to your job search page
+
+    6. Google Play Pre-Registration (Optional - Do This Now):
+       a) Go to Google Play Console: play.google.com/console
+       b) Create new app (even without APK ready)
+       c) Fill in store listing details (same as App Store)
+       d) Set status to "Pre-registration" or "Coming soon"
+       e) Get your Play Store URL and replace the disabled button
+       f) Benefits: Build anticipation, collect interested users, get URL early
+
+    7. Custom CSS (add to Appearance → Customize → Additional CSS):
+       Copy the styles from the <style> tag above
+
+    8. Images to add:
+       - App screenshots
+       - Professional photos
+       - Feature illustrations
+       - App Store badges
+-->
+
+</body>
+</html>

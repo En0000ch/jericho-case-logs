@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional case logging app for CRNAs, nurses, and healthcare providers. Track clinical experience, generate reports, and find opportunities.">
+    <title>Jericho Case Logs - Professional Case Logging for Healthcare Providers</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #2e3241;
+            color: #e0fbfc;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: rgba(46, 50, 65, 0.6);
+            padding: 60px 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(238, 108, 77, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #e0fbfc;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: #95b0b1;
+            margin-bottom: 0;
+        }
+
+        /* Download Buttons */
+        .download-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+
+        .download-button img {
+            height: 60px;
+            width: auto;
+        }
+
+        .download-button.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Section Styling */
+        .section {
+            padding: 60px 20px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 32px;
+            color: #e0fbfc;
+            margin-bottom: 40px;
+        }
+
+        /* Feature Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .feature-card {
+            background: rgba(57, 62, 80, 0.4);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid rgba(238, 108, 77, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            color: #ee6c4d;
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: #95b0b1;
+            font-size: 15px;
+        }
+
+        /* Professional Types */
+        .professionals {
+            background: rgba(46, 50, 65, 0.4);
+            padding: 60px 20px;
+            border-radius: 12px;
+            margin: 60px 20px;
+        }
+
+        .professional-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .professional-card {
+            background: rgba(57, 62, 80, 0.6);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(238, 108, 77, 0.2);
+        }
+
+        .professional-card h4 {
+            color: #ee6c4d;
+            font-size: 20px;
+            margin: 15px 0 10px 0;
+        }
+
+        .professional-card p {
+            color: #95b0b1;
+            font-size: 14px;
+        }
+
+        .status {
+            font-size: 13px;
+            font-weight: bold;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .status.available {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+
+        .status.coming-soon {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+            border: 1px solid #FFC107;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #95b0b1;
+            border-top: 1px solid rgba(238, 108, 77, 0.2);
+            margin-top: 60px;
+        }
+
+        footer a {
+            color: #ee6c4d;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .hero p {
+                font-size: 18px;
+            }
+
+            .section-title {
+                font-size: 26px;
+            }
+
+            .download-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="container">
+            <h1>Professional Case Logging for Healthcare Providers</h1>
+            <p>Track your clinical experience • Generate reports • Find opportunities</p>
+        </div>
+    </div>
+
+    <!-- Who It's For Section -->
+    <div class="professionals">
+        <div class="container">
+            <h2 class="section-title">Built for Healthcare Professionals</h2>
+            <div class="professional-grid">
+                <div class="professional-card">
+                    <div class="feature-icon">💉</div>
+                    <h4>CRNAs & Anesthesia</h4>
+                    <p>Comprehensive anesthetic case tracking</p>
+                    <span class="status available">✓ Available</span>
+                </div>
+                <div class="professional-card">
+                    <div class="feature-icon">🩺</div>
+                    <h4>Nurses</h4>
+                    <p>Build your professional portfolio</p>
+                    <span class="status available">✓ Available</span>
+                </div>
+                <div class="professional-card">
+                    <div class="feature-icon">⚕️</div>
+                    <h4>Scrub Techs</h4>
+                    <p>Document surgical experience</p>
+                    <span class="status coming-soon">Coming Soon</span>
+                </div>
+                <div class="professional-card">
+                    <div class="feature-icon">👨‍⚕️</div>
+                    <h4>Physicians</h4>
+                    <p>Manage clinical documentation</p>
+                    <span class="status coming-soon">Coming Soon</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Features Section -->
+    <div class="section">
+        <div class="container">
+            <h2 class="section-title">Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Smart Case Logging</h3>
+                    <p>Quick documentation with intelligent forms designed for medical professionals. Track procedures, demographics, and outcomes efficiently.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Visual Analytics</h3>
+                    <p>See your experience at a glance with charts and graphs. Generate professional reports for credentialing and performance reviews.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Job Search</h3>
+                    <p>Discover travel nursing, CRNA, and locum opportunities. Filter by location, pay, and facility type.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <h3>Calendar Management</h3>
+                    <p>Track your schedule and assignments. Sync with your device calendar and never miss a shift.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🏥</div>
+                    <h3>Facility Database</h3>
+                    <p>Build your own database of facilities and surgeons you've worked with. Quickly add them to new cases.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>HIPAA Compliant</h3>
+                    <p>Your data is encrypted and secure. We never store identifiable patient information.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📄</div>
+                    <h3>Export Reports</h3>
+                    <p>Generate professional PDF reports for credentialing, CME submissions, or performance reviews.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Skill Tracking</h3>
+                    <p>Monitor your progress across procedures and techniques. Set goals and watch your expertise grow.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benefits Section -->
+    <div class="section" style="background: rgba(46, 50, 65, 0.4);">
+        <div class="container">
+            <h2 class="section-title">Why Healthcare Professionals Choose Us</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>🎓 Perfect for Credentialing</h3>
+                    <p>Generate reports that meet hospital and agency requirements. Show your experience with professional case logs.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>⏱️ Save Time</h3>
+                    <p>Stop using spreadsheets. Our smart forms and auto-fill features cut documentation time in half.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>💼 Advance Your Career</h3>
+                    <p>Track growth, discover opportunities, and showcase skills with comprehensive analytics.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>🌟 Built by Professionals</h3>
+                    <p>Designed with input from CRNAs and nurses who understand what you need to succeed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Buttons at Bottom -->
+    <div class="section">
+        <div class="container" style="text-align: center;">
+            <div class="download-buttons">
+                <a href="https://apps.apple.com/us/app/jericho-case-logs/id6466726836" target="_blank" class="download-button">
+                    <img src="https://www.jerichocaselogs.com/wp-content/uploads/2025/12/apple-app-store.webp" alt="Download on the App Store" />
+                </a>
+                <a href="#" class="download-button disabled" onclick="return false;">
+                    <img src="https://www.jerichocaselogs.com/wp-content/uploads/2025/12/google-play-1-300x93-1.webp" alt="Get it on Google Play (Coming Soon)" />
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Jericho Case Logs. All rights reserved.</p>
+            <p style="margin-top: 10px;">
+                <a href="/privacy-policy">Privacy Policy</a> •
+                <a href="/post-a-job">Post a Job</a> •
+                <a href="/employer-login">Employer Login</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
