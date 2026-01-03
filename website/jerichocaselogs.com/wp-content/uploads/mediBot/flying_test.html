@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>flying.glb test</title>
+
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <style>
+    html, body { margin:0; height:100%; background:#111; color:#fff; font-family:system-ui; }
+    model-viewer { width:100vw; height:100vh; display:block; background:#111; }
+    #hud {
+      position:fixed; top:10px; left:10px; z-index:10;
+      background:rgba(0,0,0,.65); padding:10px 12px; border-radius:10px;
+      font-size:13px; line-height:1.35; max-width:520px;
+    }
+    button { margin-right:8px; }
+    code { color:#9ad; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div><strong>Status:</strong> <span id="status">JS_OK (loading…)</span></div>
+    <div><strong>src:</strong> <code>./flying.glb</code></div>
+    <div><strong>duration:</strong> <span id="dur">?</span></div>
+    <div style="margin-top:8px;">
+      <button id="play">Play</button>
+      <button id="pause">Pause</button>
+      <button id="rewind">Rewind</button>
+    </div>
+    <div style="margin-top:6px;">Tip: drag/rotate; use buttons to confirm animation responds.</div>
+  </div>
+
+  <model-viewer
+    id="mv"
+    src="./flying.glb"
+    camera-controls
+    autoplay
+    animation-crossfade-duration="200"
+    interaction-prompt="none"
+    loading="eager"
+    reveal="auto"
+    exposure="1"
+    shadow-intensity="1">
+  </model-viewer>
+
+  <script>
+    const mv = document.getElementById('mv');
+    const status = document.getElementById('status');
+    const dur = document.getElementById('dur');
+
+    const btnPlay = document.getElementById('play');
+    const btnPause = document.getElementById('pause');
+    const btnRewind = document.getElementById('rewind');
+
+    function update() {
+      if (mv.duration && isFinite(mv.duration)) dur.textContent = mv.duration.toFixed(3) + "s";
+    }
+
+    // Fires when model + resources are ready
+    mv.addEventListener('load', () => {
+      status.textContent = "LOADED";
+      // Force a resize (helps if a browser briefly creates a 0x0 WebGL canvas)
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+      update();
+    });
+
+    mv.addEventListener('error', (e) => {
+      status.textContent = "ERROR (open DevTools console)";
+      console.error("model-viewer error:", e);
+    });
+
+    btnPlay.addEventListener('click', () => { mv.play(); update(); });
+    btnPause.addEventListener('click', () => { mv.pause(); update(); });
+    btnRewind.addEventListener('click', () => { mv.currentTime = 0; update(); });
+  </script>
+</body>
+</html>

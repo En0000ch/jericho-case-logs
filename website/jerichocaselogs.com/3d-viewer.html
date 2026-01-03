@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }
+
+        #viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(10, 10, 10, 0.9);
+            padding: 15px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90%;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00f3ff, #a855f7);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+        }
+
+        select {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 180px;
+        }
+
+        select option {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        #animInfo {
+            color: #00f3ff;
+            font-size: 12px;
+            padding: 4px 12px;
+            background: rgba(0, 243, 255, 0.1);
+            border-radius: 15px;
+            white-space: nowrap;
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00f3ff;
+            font-size: 18px;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+
+        #error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff0044;
+            font-size: 16px;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 0, 68, 0.1);
+            border: 1px solid #ff0044;
+            border-radius: 10px;
+            display: none;
+            max-width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Loading 3D model...</div>
+    <div id="error"></div>
+    <div id="viewer"></div>
+    <div id="controls" style="display: none;">
+        <button id="playPause">⏸ Pause</button>
+        <select id="animSelect">
+            <option value="">Select Animation</option>
+        </select>
+        <div id="animInfo">Ready</div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Get model path from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const modelPath = urlParams.get('model') || '/Meshy_Merged_Animations.glb';
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = null;
+
+        // Camera setup - adjusted for better framing
+        const camera = new THREE.PerspectiveCamera(
+            45,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(0, 1, 4); // Moved back and adjusted height
+
+        // Renderer setup
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        document.getElementById('viewer').appendChild(renderer.domElement);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 2;
+        controls.maxDistance = 12;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 2;
+        controls.target.set(0, 0.8, 0); // Look at center of model
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+        scene.add(ambientLight);
+
+        const directionalLight1 = new THREE.DirectionalLight(0x00f3ff, 2);
+        directionalLight1.position.set(5, 5, 5);
+        scene.add(directionalLight1);
+
+        const directionalLight2 = new THREE.DirectionalLight(0xa855f7, 1.5);
+        directionalLight2.position.set(-5, 3, -5);
+        scene.add(directionalLight2);
+
+        // Animation variables
+        let mixer = null;
+        let clips = [];
+        let actions = [];
+        let currentAction = null;
+        let isPlaying = true;
+        const clock = new THREE.Clock();
+
+        // Load model
+        const loader = new GLTFLoader();
+        console.log('Loading model from:', modelPath);
+
+        loader.load(
+            modelPath,
+            function (gltf) {
+                const model = gltf.scene;
+
+                // Center and scale model - adjusted for better visibility
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 1.8 / maxDim; // Slightly smaller scale
+                model.scale.setScalar(scale);
+
+                // Position model lower in frame to show head
+                model.position.x = -center.x * scale;
+                model.position.y = (-center.y * scale) - 0.3; // Move down
+                model.position.z = -center.z * scale;
+
+                scene.add(model);
+
+                console.log('Model loaded. Bounding box:', {
+                    min: box.min,
+                    max: box.max,
+                    size: size,
+                    center: center
+                });
+
+                // Setup animations if available
+                if (gltf.animations && gltf.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(model);
+                    clips = gltf.animations;
+
+                    const animSelect = document.getElementById('animSelect');
+                    const animInfo = document.getElementById('animInfo');
+
+                    console.log(`\n=== ANIMATIONS (${clips.length}) ===`);
+
+                    clips.forEach((clip, index) => {
+                        const action = mixer.clipAction(clip);
+                        action.name = clip.name; // Store name on action
+                        actions.push(action);
+
+                        const option = document.createElement('option');
+                        option.value = index;
+                        option.textContent = clip.name || `Animation ${index + 1}`;
+                        option.dataset.clipName = clip.name;
+                        animSelect.appendChild(option);
+
+                        console.log(`[${index}] "${clip.name}" (${clip.duration.toFixed(2)}s, ${clip.tracks.length} tracks)`);
+                    });
+
+                    console.log('===================\n');
+
+                    // Play first animation by default
+                    if (actions.length > 0) {
+                        currentAction = actions[0];
+                        currentAction.play();
+                        animSelect.value = '0';
+                        animInfo.textContent = `${clips[0].name}`;
+                        console.log(`▶ Playing: "${clips[0].name}"`);
+                    }
+
+                    // Show controls
+                    document.getElementById('controls').style.display = 'flex';
+                } else {
+                    document.getElementById('animInfo').textContent = 'No animations';
+                    console.warn('No animations found in model');
+                }
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+            },
+            function (progress) {
+                const percent = (progress.loaded / progress.total * 100).toFixed(0);
+                document.getElementById('loading').textContent = `Loading... ${percent}%`;
+            },
+            function (error) {
+                console.error('Error loading model:', error);
+                const errorDiv = document.getElementById('error');
+                errorDiv.innerHTML = `
+                    <strong>Error loading 3D model</strong><br>
+                    Model path: ${modelPath}<br>
+                    <small>Make sure Meshy_Merged_Animations.glb is uploaded</small>
+                `;
+                errorDiv.style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+            }
+        );
+
+        // Play/Pause button
+        document.getElementById('playPause').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+            if (mixer) {
+                mixer.timeScale = isPlaying ? 1 : 0;
+            }
+            console.log(isPlaying ? 'Animation resumed' : 'Animation paused');
+        });
+
+        // Animation selector
+        document.getElementById('animSelect').addEventListener('change', function() {
+            const index = parseInt(this.value);
+            if (isNaN(index) || !actions[index] || !clips[index]) {
+                console.warn('Invalid animation index:', index);
+                return;
+            }
+
+            const animInfo = document.getElementById('animInfo');
+            const selectedClip = clips[index];
+            const selectedAction = actions[index];
+
+            console.log(`\n>>> SWITCHING TO ANIMATION [${index}]`);
+            console.log(`    Name: "${selectedClip.name}"`);
+            console.log(`    Duration: ${selectedClip.duration.toFixed(2)}s`);
+            console.log(`    Tracks: ${selectedClip.tracks.length}`);
+
+            if (currentAction) {
+                console.log(`    Stopping: "${currentAction.name}"`);
+                currentAction.fadeOut(0.5);
+            }
+
+            currentAction = selectedAction;
+            currentAction.reset().fadeIn(0.5).play();
+
+            animInfo.textContent = selectedClip.name;
+            console.log(`    ▶ Now playing: "${selectedClip.name}"`);
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            if (mixer && isPlaying) {
+                mixer.update(delta);
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

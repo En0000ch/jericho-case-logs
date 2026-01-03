@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>model-viewer smoke test</title>
+
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+  <style>
+    html,body{margin:0;height:100%;background:#111;color:#fff;font-family:system-ui}
+    model-viewer{width:100vw;height:100vh;display:block;background:#111}
+    #hud{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.6);padding:8px 10px;border-radius:10px;font-size:13px;z-index:10}
+  </style>
+</head>
+<body>
+  <div id="hud">If you see an astronaut, model-viewer is working.</div>
+
+  <model-viewer
+    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+    camera-controls
+    autoplay
+    exposure="1"
+    shadow-intensity="1">
+  </model-viewer>
+</body>
+</html>

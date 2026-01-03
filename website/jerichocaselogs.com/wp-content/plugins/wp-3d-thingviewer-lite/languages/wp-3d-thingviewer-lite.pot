@@ -1,0 +1,731 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2022-07-21 11:50+0200\n"
+"PO-Revision-Date: 2015-14-13 18:20+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.1.1\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: __;_e\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: admin/class-tgm-plugin-activation.php:334
+msgid "Install Required Plugins"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:335
+msgid "Install Plugins"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:337
+#, php-format
+msgid "Installing Plugin: %s"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:339
+#, php-format
+msgid "Updating Plugin: %s"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:340
+msgid "Something went wrong with the plugin API."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:392
+msgid "Return to Required Plugins Installer"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:393
+msgid "Return to the Dashboard"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:394 admin/class-tgm-plugin-activation.php:3252
+msgid "Plugin activated successfully."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:395
+msgid "The following plugin was activated successfully:"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:397
+#, php-format
+msgid "No action taken. Plugin %1$s was already active."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:399
+#, php-format
+msgid ""
+"Plugin not activated. A higher version of %s is needed for this theme. Please update "
+"the plugin."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:401
+#, php-format
+msgid "All plugins installed and activated successfully. %1$s"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:402
+msgid "Dismiss this notice"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:403
+msgid ""
+"There are one or more required or recommended plugins to install, update or activate."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:404
+msgid "Please contact the administrator of this site for help."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2075
+#, php-format
+msgid "TGMPA v%s"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2366
+msgid "Required"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2369
+msgid "Recommended"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2385
+msgid "WordPress Repository"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2388
+msgid "External Source"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2391
+msgid "Pre-Packaged"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2408
+msgid "Not Installed"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2412
+msgid "Installed But Not Activated"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2414
+msgid "Active"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2420
+msgid "Required Update not Available"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2423
+msgid "Requires Update"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2426
+msgid "Update recommended"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2583
+msgid "Installed version:"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2591
+msgid "Minimum required version:"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2603
+msgid "Available version:"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2640
+msgid "Plugin"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2641
+msgid "Source"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2642
+msgid "Type"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2646
+msgid "Version"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2647
+msgid "Status"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2696
+#, php-format
+msgid "Install %2$s"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2701
+#, php-format
+msgid "Update %2$s"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2707
+#, php-format
+msgid "Activate %2$s"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2810
+msgid "Install"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2816
+msgid "Update"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2819
+msgid "Activate"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2850
+msgid "No plugins were selected to be installed. No action taken."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2852
+msgid "No plugins were selected to be updated. No action taken."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2893
+msgid "No plugins are available to be installed at this time."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:2895
+msgid "No plugins are available to be updated at this time."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3251
+msgid "Plugin activation failed."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3591
+#, php-format
+msgid "Updating Plugin %1$s (%2$d/%3$d)"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3594
+#, php-format
+msgid "An error occurred while installing %1$s: <strong>%2$s</strong>."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3596
+#, php-format
+msgid "The installation of %1$s failed."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3600
+msgid ""
+"The installation and activation process is starting. This process may take a while "
+"on some hosts, so please be patient."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3602
+#, php-format
+msgid "%1$s installed and activated successfully."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3603
+msgid "All installations and activations have been completed."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3605
+#, php-format
+msgid "Installing and Activating Plugin %1$s (%2$d/%3$d)"
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3608
+msgid ""
+"The installation process is starting. This process may take a while on some hosts, "
+"so please be patient."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3611
+msgid "All installations have been completed."
+msgstr ""
+
+#: admin/class-tgm-plugin-activation.php:3613
+#, php-format
+msgid "Installing Plugin %1$s (%2$d/%3$d)"
+msgstr ""
+
+#: admin/class-wp-3d-thingviewer-admin.php:133
+msgid ""
+"With the 2.0 version the plugin does not need anymore the plugin Redux Framework to "
+"work. You can safely disable if you don't need."
+msgstr ""
+
+#: admin/class-wp-3d-thingviewer-admin.php:213
+msgid "STL Files"
+msgstr ""
+
+#: admin/class-wp-3d-thingviewer-admin.php:214
+msgid "Manage STL"
+msgstr ""
+
+#: admin/class-wp-3d-thingviewer-admin.php:215
+#, php-format
+msgid "STL Files <span class=\"count\">(%s)</span>"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:417
+msgid "Font family"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:440
+msgid "Color"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:465
+msgid "Size"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:472
+msgid "Font weight"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:474
+msgid "Regular"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:475
+msgid "Bold"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:520
+msgid "Documentation"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:527
+msgid "Save settings"
+msgstr ""
+
+#: includes/class-wp-accolore-settings.php:529
+msgid "Reset all settings"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-public.php:114
+msgid ""
+"MOUSE LEFT BUTTON = rotate<br/>MOUSE RIGHT BUTTON = pan<br/>MOUSE WHEEL = zoom in / "
+"zoom out<br/>"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-public.php:115
+msgid ""
+"File name: {0}<br/>File size: {1}<br/>Triangles: {2}<br/>Surface area: {3} cm2<br/"
+">Model volume: {4} cm3<br/>Bounding box<br/>X: {5} cm<br/>Y: {6} cm<br/>Z: {7} cm<br/"
+">"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-rest.php:125
+msgid "You cannot access to this page"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-woocommerce.php:85
+msgid "3D Printed Product"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-woocommerce.php:124
+msgid "Current 3D Model"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-woocommerce.php:125
+msgid "The 3D model for the product."
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-woocommerce.php:133
+msgid "Select 3D Model"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-woocommerce.php:134
+msgid "Remove 3D Model"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-woocommerce.php:260
+msgid "Select a 3d model"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-woocommerce.php:262
+msgid "Use this model"
+msgstr ""
+
+#: public/class-wp-3d-thingviewer-woocommerce.php:318
+msgid "View 3D Model"
+msgstr ""
+
+#: wp-accolore-config.php:30
+msgid "Control Buttons"
+msgstr ""
+
+#: wp-accolore-config.php:36 wp-accolore-config.php:227
+msgid "Plugin screenshot"
+msgstr ""
+
+#: wp-accolore-config.php:42
+msgid "Display help window button"
+msgstr ""
+
+#: wp-accolore-config.php:43
+msgid "The help window show the keyboard keys and mouse controls to use the viewer."
+msgstr ""
+
+#: wp-accolore-config.php:46 wp-accolore-config.php:56 wp-accolore-config.php:66
+#: wp-accolore-config.php:76 wp-accolore-config.php:86 wp-accolore-config.php:96
+#: wp-accolore-config.php:163 wp-accolore-config.php:172 wp-accolore-config.php:181
+#: wp-accolore-config.php:190 wp-accolore-config.php:199 wp-accolore-config.php:208
+#: wp-accolore-config.php:305 wp-accolore-config.php:323
+msgid "Yes"
+msgstr ""
+
+#: wp-accolore-config.php:47 wp-accolore-config.php:57 wp-accolore-config.php:67
+#: wp-accolore-config.php:77 wp-accolore-config.php:87 wp-accolore-config.php:97
+#: wp-accolore-config.php:164 wp-accolore-config.php:173 wp-accolore-config.php:182
+#: wp-accolore-config.php:191 wp-accolore-config.php:200 wp-accolore-config.php:209
+#: wp-accolore-config.php:306 wp-accolore-config.php:324
+msgid "No"
+msgstr ""
+
+#: wp-accolore-config.php:52
+msgid "Display fullscreen button"
+msgstr ""
+
+#: wp-accolore-config.php:53
+msgid ""
+"The full screen switch button let the user to switch the views into full width mode."
+msgstr ""
+
+#: wp-accolore-config.php:62
+msgid "Display info window button"
+msgstr ""
+
+#: wp-accolore-config.php:63
+msgid ""
+"The info window contain various informations about the loaded model, like volume, "
+"surface area, sizes."
+msgstr ""
+
+#: wp-accolore-config.php:72
+msgid "Display bounding box button"
+msgstr ""
+
+#: wp-accolore-config.php:73
+msgid "The bounding box is a box that highlight the boundary of the loaded model."
+msgstr ""
+
+#: wp-accolore-config.php:82
+msgid "Display model download button"
+msgstr ""
+
+#: wp-accolore-config.php:83
+msgid "Display a button to let the user to download the 3D model."
+msgstr ""
+
+#: wp-accolore-config.php:92
+msgid "Display camera auto-rotation button"
+msgstr ""
+
+#: wp-accolore-config.php:93
+msgid "The button start the camera auto-rotation around the Y axis."
+msgstr ""
+
+#: wp-accolore-config.php:102
+msgid "Camera auto-rotation value"
+msgstr ""
+
+#: wp-accolore-config.php:103
+msgid "Determine the rotation value for the camera auto-rotation."
+msgstr ""
+
+#: wp-accolore-config.php:115
+msgid "Zoom factor"
+msgstr ""
+
+#: wp-accolore-config.php:116
+msgid ""
+"The multiplying factor for the camera zoom. It allows to control the camera position "
+"after the model loading."
+msgstr ""
+
+#: wp-accolore-config.php:128
+msgid "Ambient light intensity"
+msgstr ""
+
+#: wp-accolore-config.php:129
+msgid ""
+"The intensity for the ambient light. It allows to control the model illumination."
+msgstr ""
+
+#: wp-accolore-config.php:148
+msgid "Info Window"
+msgstr ""
+
+#: wp-accolore-config.php:154
+msgid "Info window screenshot"
+msgstr ""
+
+#: wp-accolore-config.php:160
+msgid "Display model filename"
+msgstr ""
+
+#: wp-accolore-config.php:161
+msgid "Display the filename of the loaded model into the info window."
+msgstr ""
+
+#: wp-accolore-config.php:169
+msgid "Display model file size"
+msgstr ""
+
+#: wp-accolore-config.php:170
+msgid "Display the file size of the loaded model into the info window."
+msgstr ""
+
+#: wp-accolore-config.php:178
+msgid "Display triangles number"
+msgstr ""
+
+#: wp-accolore-config.php:179
+msgid "Display the number of the triangles of the loaded model info the info window."
+msgstr ""
+
+#: wp-accolore-config.php:187
+msgid "Display surface area"
+msgstr ""
+
+#: wp-accolore-config.php:188
+msgid "Display the surface area of the loaded model into the infor window."
+msgstr ""
+
+#: wp-accolore-config.php:196
+msgid "Display volume"
+msgstr ""
+
+#: wp-accolore-config.php:197
+msgid "Display the volume of the loaded model into the info window."
+msgstr ""
+
+#: wp-accolore-config.php:205
+msgid "Display bounding box size"
+msgstr ""
+
+#: wp-accolore-config.php:206
+msgid "Display the bounding box sizes of the loaded model."
+msgstr ""
+
+#: wp-accolore-config.php:221
+msgid "Styling"
+msgstr ""
+
+#: wp-accolore-config.php:233
+msgid "Buttons icons color"
+msgstr ""
+
+#: wp-accolore-config.php:234
+msgid ""
+"The color for the thingviewer buttons icons (info button, help button, fullscreen "
+"button,...)."
+msgstr ""
+
+#: wp-accolore-config.php:254
+msgid "Button background color"
+msgstr ""
+
+#: wp-accolore-config.php:255
+msgid "The color for the thingviewer buttons icons background"
+msgstr ""
+
+#: wp-accolore-config.php:264
+msgid "Button hover background color"
+msgstr ""
+
+#: wp-accolore-config.php:265
+msgid "The color for the thingviewer buttons background on mouse hover."
+msgstr ""
+
+#: wp-accolore-config.php:278
+msgid "Typography"
+msgstr ""
+
+#: wp-accolore-config.php:279
+msgid "Typography for info window and help window."
+msgstr ""
+
+#: wp-accolore-config.php:294
+msgid "Model color"
+msgstr ""
+
+#: wp-accolore-config.php:295
+msgid "The color of the loaded 3d model."
+msgstr ""
+
+#: wp-accolore-config.php:302
+msgid "Display fog"
+msgstr ""
+
+#: wp-accolore-config.php:303
+msgid ""
+"Display fog into the thingviewer (the model will not be affected by the fog, only "
+"the background"
+msgstr ""
+
+#: wp-accolore-config.php:311
+msgid "Fog color"
+msgstr ""
+
+#: wp-accolore-config.php:312
+msgid "The color of the fog into the thingviewer."
+msgstr ""
+
+#: wp-accolore-config.php:320
+msgid "Display plane and grid"
+msgstr ""
+
+#: wp-accolore-config.php:321
+msgid "Display the plane and grid into the thingviewer."
+msgstr ""
+
+#: wp-accolore-config.php:329
+msgid "Plane color"
+msgstr ""
+
+#: wp-accolore-config.php:330
+msgid "The color of the base plane of the thingviewer."
+msgstr ""
+
+#: wp-accolore-config.php:338
+msgid "Grid color"
+msgstr ""
+
+#: wp-accolore-config.php:339
+msgid "The color of the plane grid of the thingviewer."
+msgstr ""
+
+#: wp-accolore-config.php:347
+msgid "Light color"
+msgstr ""
+
+#: wp-accolore-config.php:348
+msgid "The color of the illuminating light of the thingviewer."
+msgstr ""
+
+#: wp-accolore-config.php:356
+msgid "Bounding box color"
+msgstr ""
+
+#: wp-accolore-config.php:357
+msgid ""
+"The color of the model bounding box. The bounding box can be displayed with the "
+"correspondent button."
+msgstr ""
+
+#: wp-accolore-config.php:365
+msgid "Loading layer background color"
+msgstr ""
+
+#: wp-accolore-config.php:366
+msgid ""
+"The color of the background layer displayed when the 3d model loading is in progress."
+msgstr ""
+
+#: wp-accolore-config.php:376
+msgid "Loading spinner color"
+msgstr ""
+
+#: wp-accolore-config.php:377
+msgid "The color of the spinner displayed when 3d model loading is in progress."
+msgstr ""
+
+#: wp-accolore-config.php:389
+msgid "Loading text typography"
+msgstr ""
+
+#: wp-accolore-config.php:390
+msgid "Typography for loading text (with the model loaded size)."
+msgstr ""
+
+#: wp-accolore-config.php:425
+msgid "Woocommerce"
+msgstr ""
+
+#: wp-accolore-config.php:431
+msgid "Thingviewer button position"
+msgstr ""
+
+#: wp-accolore-config.php:432
+msgid ""
+"The position in the product page where the button to display the thingviewer will be "
+"displayed."
+msgstr ""
+
+#: wp-accolore-config.php:435
+msgid "Before product meta"
+msgstr ""
+
+#: wp-accolore-config.php:436
+msgid "After product meta"
+msgstr ""
+
+#: wp-accolore-config.php:437
+msgid "Before add to cart form"
+msgstr ""
+
+#: wp-accolore-config.php:438
+msgid "After add to cart form"
+msgstr ""
+
+#: wp-accolore-config.php:439
+msgid "After add to cart button"
+msgstr ""
+
+#: wp-accolore-config.php:440
+msgid "Before add to cart quantity"
+msgstr ""
+
+#: wp-accolore-config.php:441
+msgid "After add to cart quantity"
+msgstr ""
+
+#: wp-accolore-config.php:442
+msgid "Before variations"
+msgstr ""
+
+#: wp-accolore-config.php:443
+msgid "After variations"
+msgstr ""
+
+#: wp-accolore-config.php:444
+msgid "Before single variation"
+msgstr ""
+
+#: wp-accolore-config.php:445
+msgid "After single variation"
+msgstr ""
+
+#: wp-accolore-config.php:446
+msgid "After single product summary"
+msgstr ""
+
+#: wp-accolore-config.php:447
+msgid "After single product"
+msgstr ""
+
+#: wp-accolore-config.php:456
+msgid "Custom position"
+msgstr ""
+
+#: wp-accolore-config.php:457
+msgid "Here you can specify the hook where you want to display the Thingviewer button."
+msgstr ""

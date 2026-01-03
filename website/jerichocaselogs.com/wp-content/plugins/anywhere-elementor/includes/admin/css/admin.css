@@ -1,0 +1,52 @@
+.ae-admin-topbar {
+	margin: 0 0 0 -20px;
+	padding: 10px 20px 0 20px;
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	display: flex;
+	justify-content: space-between;
+}
+
+.ae-admin-topbar .ae-branding {
+	display: flex;
+	align-items: center;
+	padding-bottom: 10px;
+}
+
+.ae-admin-topbar .ae-branding img, .ae-admin-topbar .ae-branding svg {
+	width: 50px;
+	margin-right: 10px;
+}
+
+.ae-admin-topbar .ae-branding h1 {
+	margin: 0 10px 0 0;
+	font-size: 24px;
+	font-weight: normal;
+}
+
+.ae-admin-topbar .ae-nav {
+	align-self: flex-end;
+}
+
+.ae-admin-topbar .ae-nav ul {
+	display: flex;
+	margin: 0;
+}
+
+.ae-admin-topbar .ae-nav ul li {
+	margin: 0;
+}
+
+.ae-admin-topbar .ae-nav ul li.ae-nav-active {
+	border-bottom: 2px solid #0071a1;
+	font-weight: bold;
+}
+
+.ae-admin-topbar .ae-nav ul a {
+	display: block;
+	padding: 10px;
+	color: #555;
+	text-decoration: none;
+	font-size: 20px;
+	margin: 0 10px;
+}
