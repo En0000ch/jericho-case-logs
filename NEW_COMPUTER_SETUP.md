@@ -65,21 +65,36 @@ Or use your preferred AI coding assistant.
 
 ## 📦 Part 2: Clone Your Repository
 
-### Get Repository URL
-Your git repository should be at:
-- GitHub: `https://github.com/YOUR_USERNAME/jericho_case_logs`
-- Or wherever you pushed it
+### Your Repository URL
+Your git repository is hosted on Launchpad:
+- **SSH**: `git+ssh://dbarrett000@git.launchpad.net/~dbarrett000/+git/jerichoCaseL0gs`
+- **HTTPS**: `https://git.launchpad.net/~dbarrett000/+git/jerichoCaseL0gs`
 
 ### Clone the Repository
 ```bash
 # Navigate to desired location
 cd ~/Desktop
 
-# Clone the repository
-git clone <YOUR_REPOSITORY_URL>
+# Clone the repository (SSH - requires SSH keys set up)
+git clone git+ssh://dbarrett000@git.launchpad.net/~dbarrett000/+git/jerichoCaseL0gs jericho_case_logs
+
+# OR use HTTPS (prompts for credentials)
+git clone https://git.launchpad.net/~dbarrett000/+git/jerichoCaseL0gs jericho_case_logs
 
 # Navigate into the project
 cd jericho_case_logs
+```
+
+### Set Up SSH Keys (Recommended for SSH clone)
+```bash
+# Generate SSH key if you don't have one
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+# Copy your public key
+cat ~/.ssh/id_rsa.pub
+
+# Add this key to Launchpad at:
+# https://launchpad.net/~dbarrett000/+editsshkeys
 ```
 
 ---
@@ -355,10 +370,12 @@ claude
 - Claude Code: https://claude.com/claude-code
 
 ### Your Git Repository:
-**IMPORTANT**: Add your actual repository URL here after pushing:
 ```
-Repository URL: [YOUR_REPO_URL_HERE]
+SSH URL: git+ssh://dbarrett000@git.launchpad.net/~dbarrett000/+git/jerichoCaseL0gs
+HTTPS URL: https://git.launchpad.net/~dbarrett000/+git/jerichoCaseL0gs
 ```
+
+**Note**: SSH requires SSH keys set up in Launchpad. Use HTTPS if SSH isn't configured yet.
 
 ---
 
@@ -367,7 +384,7 @@ Repository URL: [YOUR_REPO_URL_HERE]
 ```bash
 # One-time setup
 cd ~/Desktop
-git clone <YOUR_REPO_URL>
+git clone git+ssh://dbarrett000@git.launchpad.net/~dbarrett000/+git/jerichoCaseL0gs jericho_case_logs
 cd jericho_case_logs
 flutter pub get
 flutter doctor

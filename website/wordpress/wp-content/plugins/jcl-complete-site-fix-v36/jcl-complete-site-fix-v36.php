@@ -68,14 +68,6 @@ function jcl_v34_head_styles() {
             border-bottom: none !important;
         }
 
-        /* Push hero content down from admin bar */
-        body.admin-bar .site-content,
-        body.admin-bar .entry-content,
-        body.admin-bar main,
-        body.admin-bar #main {
-            padding-top: 20px !important;
-        }
-
         /* UI Safe Zones - For mascot lane and floating buttons */
         :root {
             --ui-safe-top-right: 90px;
@@ -225,27 +217,28 @@ function jcl_v34_head_styles() {
             z-index: 1;
         }
 
-        /* HEADING HIERARCHY - jclwhite color */
+        /* HEADING HIERARCHY - Consistent styling */
         h1, .bde-heading-1, .breakdance h1 {
-            color: #e0fbfc !important;
+            color: #ffffff !important;
             font-weight: 700 !important;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(224, 251, 252, 0.3) !important;
+            letter-spacing: -0.5px !important;
         }
 
         h2, .bde-heading-2, .breakdance h2 {
-            color: #e0fbfc !important;
+            color: #ffffff !important;
             font-weight: 600 !important;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 15px rgba(238, 108, 77, 0.2) !important;
         }
 
         h3, .bde-heading-3, .breakdance h3 {
-            color: #e0fbfc !important;
+            color: #ff8b6d !important;
             font-weight: 600 !important;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
         }
 
         h4, .bde-heading-4, .breakdance h4 {
-            color: #e0fbfc !important;
+            color: #ff8b6d !important;
             font-weight: 600 !important;
         }
 
@@ -257,32 +250,58 @@ function jcl_v34_head_styles() {
             line-height: 1.7 !important;
         }
 
-        /* CTA Sections - DO NOT ADD OVERLAYS */
+        /* CTA Sections - Enhanced prominence */
         div[class*="cta"],
         div[class*="download"],
         div[class*="signup"],
         .bde-cta-section {
             position: relative;
+            padding: 80px 50px !important;
         }
 
-        /* App Store / Download badges - ENSURE VISIBILITY */
+        /* Spotlight effect behind CTA */
+        div[class*="cta"]::before,
+        div[class*="download"]::before,
+        div[class*="signup"]::before {
+            content: '';
+            position: absolute;
+            inset: -150px;
+            background: radial-gradient(ellipse at center, rgba(238, 108, 77, 0.15) 0%, rgba(20, 25, 35, 0.8) 50%, transparent 75%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(60px);
+        }
+
+        /* Card-like container for CTA */
+        div[class*="cta"]::after,
+        div[class*="download"]::after,
+        div[class*="signup"]::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(46, 50, 65, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            border: 1px solid rgba(238, 108, 77, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(238, 108, 77, 0.1);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* App Store / Download badges - larger and more prominent */
         img[src*="app-store"],
         img[src*="google-play"],
         img[src*="download"],
         .bde-download-badge img {
-            display: inline-block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            height: 60px !important;
+            height: 70px !important;
             width: auto !important;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-            position: relative !important;
-            z-index: 9999 !important;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
         }
 
         img[src*="app-store"]:hover,
         img[src*="google-play"]:hover {
-            filter: drop-shadow(0 4px 8px rgba(238, 108, 77, 0.3));
+            filter: drop-shadow(0 6px 12px rgba(238, 108, 77, 0.4));
         }
 
         /* Back to Top Button */
@@ -333,9 +352,22 @@ function jcl_v34_head_styles() {
                 filter: blur(30px);
             }
 
+            div[class*="cta"]::before,
+            div[class*="download"]::before,
+            div[class*="signup"]::before {
+                inset: -80px;
+                filter: blur(40px);
+            }
+
+            div[class*="cta"],
+            div[class*="download"],
+            div[class*="signup"] {
+                padding: 50px 30px !important;
+            }
+
             img[src*="app-store"],
             img[src*="google-play"] {
-                height: 55px !important;
+                height: 60px !important;
             }
 
             #jcl-back-to-top {
@@ -801,7 +833,6 @@ function jcl_v34_home_scroll_animation() {
         let actions = {};
         let currentAction = null;
         let currentPhase = 0;
-        let currentAnimationIndex = -1; // Track which animation is currently playing
         let robotModel = null;
         const clock = new THREE.Clock();
 
@@ -875,9 +906,6 @@ function jcl_v34_home_scroll_animation() {
         function playAnimation(index) {
             if (!actions[index]) return;
 
-            // Only switch if we're changing to a different animation
-            if (currentAnimationIndex === index) return;
-
             console.log('Playing animation:', index);
 
             if (currentAction) {
@@ -886,7 +914,6 @@ function jcl_v34_home_scroll_animation() {
 
             currentAction = actions[index];
             currentAction.reset().fadeIn(0.5).play();
-            currentAnimationIndex = index; // Update current animation tracker
         }
 
         // V35: New 5-phase animation with image merge and disintegration

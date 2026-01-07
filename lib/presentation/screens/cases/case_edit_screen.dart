@@ -1019,17 +1019,57 @@ class _CaseEditScreenState extends ConsumerState<CaseEditScreen> {
                         onPressed: () {
                           showDialog(
                             context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('ASA Classification'),
-                              content: const Text(
-                                  'American Society of Anesthesiologists Physical Status Classification System'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('OK'),
+                            barrierColor: Colors.black87,
+                            builder: (context) {
+                              return GestureDetector(
+                                onTap: () => Navigator.of(context).pop(),
+                                child: Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  insetPadding: const EdgeInsets.all(20),
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.of(context).pop(),
+                                    child: InteractiveViewer(
+                                      child: Image.network(
+                                        'https://www.jerichocaselogs.com/wp-content/uploads/2026/01/general-asa.png',
+                                        fit: BoxFit.contain,
+                                        loadingBuilder: (context, child, loadingProgress) {
+                                          if (loadingProgress == null) return child;
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              value: loadingProgress.expectedTotalBytes != null
+                                                  ? loadingProgress.cumulativeBytesLoaded /
+                                                      loadingProgress.expectedTotalBytes!
+                                                  : null,
+                                              color: AppColors.jclOrange,
+                                            ),
+                                          );
+                                        },
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Center(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Icons.error_outline,
+                                                  color: Colors.red,
+                                                  size: 48,
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Text(
+                                                  'Failed to load ASA guide image',
+                                                  style: const TextStyle(color: Colors.white),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           );
                         },
                         child: const Text('ASA',

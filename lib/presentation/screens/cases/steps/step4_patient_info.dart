@@ -147,6 +147,63 @@ class _Step4PatientInfoState extends ConsumerState<Step4PatientInfo> {
     );
   }
 
+  void _showAsaGuideImage(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) {
+        return GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(20),
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: InteractiveViewer(
+                child: Image.network(
+                  'https://www.jerichocaselogs.com/wp-content/uploads/2026/01/general-asa.png',
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                        color: AppColors.jclOrange,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Failed to load ASA guide image',
+                            style: const TextStyle(color: Colors.white),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final formData = ref.watch(caseFormProvider).formData;
@@ -310,11 +367,27 @@ class _Step4PatientInfoState extends ConsumerState<Step4PatientInfo> {
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'ASA Classification *',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                    GestureDetector(
+                      onTap: () => _showAsaGuideImage(context),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'ASA',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              decoration: TextDecoration.underline,
+                              color: AppColors.jclOrange,
+                            ),
+                          ),
+                          const Text(
+                            ' Classification *',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
