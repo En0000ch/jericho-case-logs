@@ -10,6 +10,7 @@ class UserModel extends User {
     super.lastName,
     super.title,
     required super.silo,
+    super.jclRole,
     super.hasPurchased,
     super.caseCount,
     super.acceptedDisclaimer,
@@ -19,6 +20,11 @@ class UserModel extends User {
 
   /// Create UserModel from Parse User object
   factory UserModel.fromParseUser(ParseUser parseUser) {
+    // Default jclRole to "CRNA" for existing users without a role
+    // This ensures backward compatibility with users created before role field was added
+    final rawRole = parseUser.get<String>('jclRole');
+    final role = (rawRole == null || rawRole.isEmpty) ? 'CRNA' : rawRole;
+
     return UserModel(
       objectId: parseUser.objectId!,
       email: parseUser.emailAddress ?? '',
@@ -26,6 +32,7 @@ class UserModel extends User {
       lastName: parseUser.get<String>('lastName'),
       title: parseUser.get<String>('title'),
       silo: parseUser.get<String>('jclSilo') ?? 'jclAnes',
+      jclRole: role,
       hasPurchased: parseUser.get<bool>('hasPurchased') ?? false,
       caseCount: parseUser.get<int>('caseCount') ?? 0,
       acceptedDisclaimer: false, // Will be fetched from local preferences
@@ -42,6 +49,7 @@ class UserModel extends User {
     parseUser.set('lastName', lastName);
     parseUser.set('title', title);
     parseUser.set('jclSilo', silo);
+    parseUser.set('jclRole', jclRole);
     parseUser.set('hasPurchased', hasPurchased);
     parseUser.set('caseCount', caseCount);
     return parseUser;
@@ -56,6 +64,7 @@ class UserModel extends User {
       lastName: json['lastName'] as String?,
       title: json['title'] as String?,
       silo: json['silo'] as String,
+      jclRole: json['jclRole'] as String?,
       hasPurchased: json['hasPurchased'] as bool? ?? false,
       caseCount: json['caseCount'] as int? ?? 0,
       acceptedDisclaimer: json['acceptedDisclaimer'] as bool? ?? false,
@@ -77,6 +86,7 @@ class UserModel extends User {
       'lastName': lastName,
       'title': title,
       'silo': silo,
+      'jclRole': jclRole,
       'hasPurchased': hasPurchased,
       'caseCount': caseCount,
       'acceptedDisclaimer': acceptedDisclaimer,
@@ -94,6 +104,7 @@ class UserModel extends User {
       lastName: lastName,
       title: title,
       silo: silo,
+      jclRole: jclRole,
       hasPurchased: hasPurchased,
       caseCount: caseCount,
       acceptedDisclaimer: acceptedDisclaimer,

@@ -14,6 +14,9 @@ import '../../../core/data/comorbidities_data.dart';
 import '../../../data/models/case_model.dart';
 import '../settings/settings_update_screen.dart';
 import 'multi_selection_screen.dart';
+import 'complications_selection_screen.dart';
+import 'anesthesia_comorbidities_selection_screen.dart';
+import 'skilled_procedures_selection_screen.dart';
 import 'general_anesthetic_selection_screen.dart';
 import 'regional_anesthetic_selection_screen.dart';
 import '../../widgets/confetti_widget.dart';
@@ -43,9 +46,9 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
   String? _gender;
   bool _asaEmergency = false;
   String _patientNotes = '';
-  String _complications = '';
-  String _comorbidities = '';
-  String _skilledProcedures = '';
+  List<String> _selectedComplications = [];
+  List<String> _selectedComorbidities = [];
+  List<String> _selectedSkilledProcedures = [];
   String? _airwayManagement;
 
   // Lists from database
@@ -1371,9 +1374,18 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
               _asaClassification = caseData['asaClassification'];
               _asaEmergency = caseData['asaEmergency'] ?? false;
               _patientNotes = caseData['patientNotes'] ?? '';
-              _complications = caseData['complications'] ?? '';
-              _comorbidities = caseData['comorbidities'] ?? '';
-              _skilledProcedures = caseData['skilledProcedures'] ?? '';
+              final complications = caseData['complications'] ?? '';
+              _selectedComplications = complications.isNotEmpty
+                  ? complications.split(', ').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
+                  : [];
+              final comorbidities = caseData['comorbidities'] ?? '';
+              _selectedComorbidities = comorbidities.isNotEmpty
+                  ? comorbidities.split(', ').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
+                  : [];
+              final skilledProcedures = caseData['skilledProcedures'] ?? '';
+              _selectedSkilledProcedures = skilledProcedures.isNotEmpty
+                  ? skilledProcedures.split(', ').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
+                  : [];
               _airwayManagement = caseData['airwayManagement'];
             });
             await _saveCase();
@@ -1713,11 +1725,11 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
     if (_patientNotes.isNotEmpty) {
       commentParts.add('Notes: $_patientNotes');
     }
-    if (_comorbidities.isNotEmpty) {
-      commentParts.add('Comorbidities: $_comorbidities');
+    if (_selectedComorbidities.isNotEmpty) {
+      commentParts.add('Comorbidities: ${_selectedComorbidities.join(', ')}');
     }
-    if (_skilledProcedures.isNotEmpty) {
-      commentParts.add('Skilled Procedures: $_skilledProcedures');
+    if (_selectedSkilledProcedures.isNotEmpty) {
+      commentParts.add('Skilled Procedures: ${_selectedSkilledProcedures.join(', ')}');
     }
 
     final anestheticsUsed = <String>[];
@@ -1741,7 +1753,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
       location: _facility,
       airwayManagement: _airwayManagement,
       additionalComments: commentParts.join('\n'),
-      complications: _complications.isNotEmpty,
+      complications: _selectedComplications.isNotEmpty,
       imageName: imageName,
     );
 
@@ -1804,6 +1816,7 @@ class _CaseCreationFlowScreenState extends ConsumerState<CaseCreationFlowScreen>
           backgroundColor: AppColors.jclOrange,
           elevation: 0,
           iconTheme: const IconThemeData(color: AppColors.jclWhite),
+          leading: const BackButton(),
         ),
         body: Container(
           decoration: BoxDecoration(
@@ -2289,6 +2302,7 @@ class _SurgeryListScreenState extends State<_SurgeryListScreen> {
           backgroundColor: AppColors.jclOrange,
           elevation: 0,
           iconTheme: const IconThemeData(color: AppColors.jclWhite),
+          leading: const BackButton(),
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
@@ -2446,9 +2460,9 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
   bool _asaEmergency = false;
   String? _gender;
   String _patientNotes = '';
-  String _complications = '';
-  String _comorbidities = '';
-  String _skilledProcedures = '';
+  List<String> _selectedComplications = [];
+  List<String> _selectedComorbidities = [];
+  List<String> _selectedSkilledProcedures = [];
   double _sliderValue = 1.0;
   bool _showConfetti = false;
 
@@ -2967,19 +2981,15 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
   void _showComplicationsDialog() async {
     final result = await Navigator.of(context).push<List<String>>(
       MaterialPageRoute(
-        builder: (_) => MultiSelectionScreen(
-          title: 'Surgical Complications',
-          defaultItems: ComplicationsData.defaultComplications,
-          sharedPrefsKey: 'jclComplicationsArray',
-          parseClassName: 'addedComplications',
-          parseArrayKey: 'addedComplications',
+        builder: (_) => ComplicationsSelectionScreen(
+          initiallySelectedComplications: _selectedComplications,
         ),
       ),
     );
 
-    if (result != null && result.isNotEmpty && mounted) {
+    if (result != null && mounted) {
       setState(() {
-        _complications = result.join(', ');
+        _selectedComplications = result;
       });
     }
   }
@@ -2987,37 +2997,31 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
   void _showComorbiditiesDialog() async {
     final result = await Navigator.of(context).push<List<String>>(
       MaterialPageRoute(
-        builder: (_) => MultiSelectionScreen(
-          title: 'Comorbidities',
-          defaultItems: ComorbiditiesData.defaultComorbidities,
-          sharedPrefsKey: 'jclComoArray',
-          parseClassName: 'savedComorbidities',
-          parseArrayKey: 'userComorbid',
+        builder: (_) => AnesthesiaComorbiditiesSelectionScreen(
+          initiallySelectedComorbidities: _selectedComorbidities,
         ),
       ),
     );
 
-    if (result != null && result.isNotEmpty && mounted) {
+    if (result != null && mounted) {
       setState(() {
-        _comorbidities = result.join(', ');
+        _selectedComorbidities = result;
       });
     }
   }
 
-  /// Navigate to same skilled procedures list as Settings "Update Skill Set"
   void _showSkilledProceduresDialog() async {
-    await Navigator.of(context).push(
+    final result = await Navigator.of(context).push<List<String>>(
       MaterialPageRoute(
-        builder: (_) => const SettingsUpdateScreen(updateType: 'skills'),
+        builder: (_) => SkilledProceduresSelectionScreen(
+          initiallySelectedProcedures: _selectedSkilledProcedures,
+        ),
       ),
     );
 
-    // Reload skilled procedures list after returning
-    final prefs = await SharedPreferences.getInstance();
-    final skills = prefs.getStringList('jclSkillsArray') ?? [];
-    if (mounted && skills.isNotEmpty) {
+    if (result != null && mounted) {
       setState(() {
-        _skilledProcedures = skills.join(', ');
+        _selectedSkilledProcedures = result;
       });
     }
   }
@@ -3205,9 +3209,9 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
       'asaClassification': _asaClassification,
       'asaEmergency': _asaEmergency,
       'patientNotes': _patientNotes,
-      'complications': _complications,
-      'comorbidities': _comorbidities,
-      'skilledProcedures': _skilledProcedures,
+      'complications': _selectedComplications.join(', '),
+      'comorbidities': _selectedComorbidities.join(', '),
+      'skilledProcedures': _selectedSkilledProcedures.join(', '),
       'airwayManagement': null,
     });
 
@@ -3522,7 +3526,9 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: GlowButton(
-                        text: 'Complications',
+                        text: _selectedComplications.isEmpty
+                            ? 'Complications'
+                            : 'Complications (${_selectedComplications.length})',
                         onPressed: _showComplicationsDialog,
                         isPrimary: true,
                         isFullWidth: true,
@@ -3537,7 +3543,9 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                   children: [
                     Expanded(
                       child: GlowButton(
-                        text: 'Comorbidities',
+                        text: _selectedComorbidities.isEmpty
+                            ? 'Comorbidities'
+                            : 'Comorbidities (${_selectedComorbidities.length})',
                         onPressed: _showComorbiditiesDialog,
                         isPrimary: true,
                         isFullWidth: true,
@@ -3546,10 +3554,13 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: GlowButton(
-                        text: 'Skilled Procedures',
+                        text: _selectedSkilledProcedures.isEmpty
+                            ? 'Skilled Procedures'
+                            : 'Skilled Procedures (${_selectedSkilledProcedures.length})',
                         onPressed: _showSkilledProceduresDialog,
                         isPrimary: true,
                         isFullWidth: true,
+                        fontSize: 13,
                       ),
                     ),
                   ],

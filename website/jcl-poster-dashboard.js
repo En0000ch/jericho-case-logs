@@ -229,22 +229,24 @@
       const displayName = this.getDisplayName();
       const orgName = this.getOrgName();
       const verificationStatus = this.getVerificationStatus();
-      const isVerified = verificationStatus === 'verified';
+      const isVerified = true; // Always verified - auto-verification
 
       const email = this.userProfile?.get('user')?.get('email') || this.currentUser.get('email') || '';
       const phone = this.userProfile?.get('phone') || this.currentUser.get('facContactPhone') || this.currentUser.get('phone') || '';
       const title = this.userProfile?.get('title') || '';
 
       // Check for notifications
-      const hasNotifications = !isVerified;
+      const hasNotifications = false; // No verification notifications
 
       // Inject Dashboard title and icons into WordPress header
       this.injectHeaderElements(hasNotifications);
 
-      // Get posting limit and count
-      const postingLimit = this.organization?.get('postingLimit') || (isVerified ? 10 : 1);
-      const currentPostsCount = await this.getJobPostsCount();
-      const creditsRemaining = Math.max(0, postingLimit - currentPostsCount);
+      // Get actual credit balance from organization (credit-based system)
+      const currentCredits = this.organization?.get('credits') || 0;
+      const creditsRemaining = currentCredits;
+
+      // Calculate how many jobs can be posted with current credits
+      const jobsCanPost = Math.floor(currentCredits / this.costPerPost);
 
       rootEl.innerHTML = `
         <div class="jcl-dash-container">
@@ -260,16 +262,19 @@
             <div class="jcl-dash-credits-inline">
               <div class="jcl-dash-credits-item">
                 <span class="jcl-dash-credits-label">Available Credits:</span>
-                <span class="jcl-dash-credits-value ${creditsRemaining === 0 ? 'jcl-credits-depleted' : ''}">${creditsRemaining} / ${postingLimit}</span>
+                <span class="jcl-dash-credits-value ${creditsRemaining === 0 ? 'jcl-credits-depleted' : ''}">${creditsRemaining} Credits</span>
               </div>
               <div class="jcl-dash-credits-item">
                 <span class="jcl-dash-credits-label">Cost per Job Post:</span>
                 <span class="jcl-dash-credits-value">${this.costPerPost} ${this.costPerPost === 1 ? 'Credit' : 'Credits'}</span>
               </div>
+              <div class="jcl-dash-credits-item">
+                <span class="jcl-dash-credits-label">Jobs You Can Post:</span>
+                <span class="jcl-dash-credits-value">${jobsCanPost} ${jobsCanPost === 1 ? 'Job' : 'Jobs'}</span>
+              </div>
               <button class="jcl-dash-btn jcl-dash-btn-secondary jcl-dash-btn-small" onclick="JCLDashboard.showPurchaseCreditsModal()" style="margin-top: 8px;">
                 💳 Purchase More Credits
               </button>
-              ${!isVerified ? '<div class="jcl-dash-credits-warning-text">⚠️ Account pending verification</div>' : ''}
             </div>
           </div>
 
@@ -383,15 +388,17 @@
      * Post a job - open modal (check credits first)
      */
     async postJob() {
-      // Check available credits (use same logic as renderDashboard)
-      const verificationStatus = this.getVerificationStatus();
-      const isVerified = verificationStatus === 'verified';
-      const postingLimit = this.organization?.get('postingLimit') || (isVerified ? 10 : 1);
-      const currentPostsCount = await this.getJobPostsCount();
-      const creditsRemaining = Math.max(0, postingLimit - currentPostsCount);
+      // Check available credits (credit-based system)
+      const currentCredits = this.organization?.get('credits') || 0;
 
-      // If no credits available, trigger payment flow
-      if (creditsRemaining === 0) {
+      // Check if organization has enough credits to post
+      if (currentCredits < this.costPerPost) {
+        // Show modal explaining they need more credits
+        alert(
+          `You need ${this.costPerPost} ${this.costPerPost === 1 ? 'credit' : 'credits'} to post a job.\n\n` +
+          `You currently have ${currentCredits} ${currentCredits === 1 ? 'credit' : 'credits'}.\n\n` +
+          `Please purchase more credits to continue.`
+        );
         this.showPurchaseCreditsModal();
         return;
       }
@@ -885,7 +892,7 @@
         `Location: ${locationDisplay}\n` +
         `Type: ${jobType}\n` +
         `Duration: ${jobDuration}\n\n` +
-        `This will ${this.organization && this.organization.get('credits') > 0 ? 'use 1 credit' : 'require payment'}.`;
+        `This will deduct ${this.costPerPost} ${this.costPerPost === 1 ? 'credit' : 'credits'} from your balance.`;
 
       if (!confirm(confirmMessage)) {
         return;
@@ -937,6 +944,23 @@
 
         // Save to Parse
         await jobPosting.save();
+
+        // Deduct credits from organization
+        if (this.organization) {
+          try {
+            const currentCredits = this.organization.get('credits') || 0;
+            const newBalance = currentCredits - this.costPerPost;
+
+            this.organization.set('credits', Math.max(0, newBalance));
+            await this.organization.save();
+
+            console.log(`[JCL Dashboard] Deducted ${this.costPerPost} credits. New balance: ${newBalance}`);
+          } catch (creditError) {
+            console.error('[JCL Dashboard] Failed to deduct credits:', creditError);
+            // Job is already posted, so just log the error
+            // Admin can manually adjust credits if needed
+          }
+        }
 
         // Save city/state to organization for future jobs (if not already saved)
         if (this.organization) {
@@ -1147,7 +1171,7 @@
      */
     viewNotifications() {
       const verificationStatus = this.getVerificationStatus();
-      const isVerified = verificationStatus === 'verified';
+      const isVerified = true; // Always verified - auto-verification
 
       const modalHTML = `
         <div id="jcl-notifications-modal" class="jcl-dash-modal">
@@ -1735,41 +1759,71 @@
         // Show loading state
         this.showNotification('Processing payment...', 'info');
 
-        // TODO: Integrate with payment processor (Stripe, PayPal, etc.)
-        // For now, we'll simulate the payment process
-
-        // Example Stripe integration would look like:
+        // TODO: Integrate with Stripe or PayPal
+        // For production, this should redirect to Stripe checkout:
         /*
         const stripe = Stripe('your_publishable_key');
         const response = await fetch('/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credits, price })
+          body: JSON.stringify({
+            credits,
+            price,
+            organizationId: this.organization?.id
+          })
         });
         const session = await response.json();
         await stripe.redirectToCheckout({ sessionId: session.id });
         */
 
-        // Temporary: Show payment options
-        const proceed = confirm(
+        // DEMO MODE: Simulate successful payment
+        const proceedWithDemo = confirm(
           `Purchase ${credits} credits for $${price.toFixed(2)}?\n\n` +
-          `This will open a payment page. After successful payment, your credits will be added automatically.`
+          `⚠️ DEMO MODE: This will add credits without payment.\n` +
+          `In production, this redirects to Stripe checkout.\n\n` +
+          `Click OK to add credits (demo only).`
         );
 
-        if (proceed) {
-          // Open payment page (replace with actual payment URL)
-          // window.location.href = `/payment?credits=${credits}&price=${price}`;
+        if (!proceedWithDemo) {
+          this.showNotification('Purchase cancelled', 'info');
+          return;
+        }
 
-          // For demo purposes, show success message
+        // Add credits to organization
+        if (this.organization) {
+          const currentCredits = this.organization.get('credits') || 0;
+          const newBalance = currentCredits + credits;
+
+          this.organization.set('credits', newBalance);
+          await this.organization.save();
+
+          // TODO: Create CreditPurchase record for admin revenue tracking
+          // This should be done after successful Stripe payment webhook
+          /*
+          const CreditPurchase = Parse.Object.extend('CreditPurchase');
+          const purchase = new CreditPurchase();
+          purchase.set('organization', this.organization);
+          purchase.set('credits', credits);
+          purchase.set('amount', price);
+          purchase.set('purchaseDate', new Date());
+          purchase.set('paymentStatus', 'completed');
+          await purchase.save();
+          */
+
           this.showNotification(
-            'Payment integration required. Please contact support to purchase credits.',
-            'info'
+            `✅ Success! ${credits} credits added to your account.\n\nNew balance: ${newBalance} credits`,
+            'success'
           );
+
+          // Reload dashboard to show new balance
+          setTimeout(() => this.init(), 1500);
+        } else {
+          throw new Error('Organization not found');
         }
 
       } catch (error) {
-        console.error('Error processing credit purchase:', error);
-        this.showNotification('Error processing payment. Please try again.', 'error');
+        console.error('[JCL Dashboard] Error processing credit purchase:', error);
+        this.showNotification('Error processing payment: ' + error.message, 'error');
       }
     },
 

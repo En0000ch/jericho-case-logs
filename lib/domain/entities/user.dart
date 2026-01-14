@@ -6,6 +6,7 @@ class User {
   final String? lastName;
   final String? title;
   final String silo; // jclAnes, jclJobs, jclAll, etc.
+  final String? jclRole; // Professional role: CRNA, CAA, Anesthesiologist, RN, LPN, Nurse, etc.
   final bool hasPurchased;
   final int caseCount;
   final bool acceptedDisclaimer;
@@ -19,6 +20,7 @@ class User {
     this.lastName,
     this.title,
     required this.silo,
+    this.jclRole,
     this.hasPurchased = false,
     this.caseCount = 0,
     this.acceptedDisclaimer = false,
@@ -59,6 +61,7 @@ class User {
     String? lastName,
     String? title,
     String? silo,
+    String? jclRole,
     bool? hasPurchased,
     int? caseCount,
     bool? acceptedDisclaimer,
@@ -72,6 +75,7 @@ class User {
       lastName: lastName ?? this.lastName,
       title: title ?? this.title,
       silo: silo ?? this.silo,
+      jclRole: jclRole ?? this.jclRole,
       hasPurchased: hasPurchased ?? this.hasPurchased,
       caseCount: caseCount ?? this.caseCount,
       acceptedDisclaimer: acceptedDisclaimer ?? this.acceptedDisclaimer,

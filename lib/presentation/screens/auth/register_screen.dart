@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/user_roles.dart';
 import '../../../core/themes/app_colors.dart';
 import '../../widgets/glow_button.dart';
 
@@ -23,7 +24,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String _selectedSilo = AppConstants.siloAnes; // Default to CRNA
+  String? _selectedRole; // User must select a role before submitting
 
   @override
   void dispose() {
@@ -39,10 +40,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validate that a role has been selected
+    if (_selectedRole == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select your professional role'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Map role to silo
+    final mappedSilo = UserRoles.mapRoleToSilo(_selectedRole!);
+
     await ref.read(authProvider.notifier).register(
           email: _emailController.text.trim(),
           password: _passwordController.text,
-          silo: _selectedSilo,
+          silo: mappedSilo,
+          role: _selectedRole!,
           firstName: _firstNameController.text.trim().isEmpty
               ? null
               : _firstNameController.text.trim(),
@@ -240,7 +256,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Account Type Selection
+                  // Professional Role Selection
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -250,45 +266,56 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          children: [
+                            const Text(
+                              'Professional Role',
+                              style: TextStyle(
+                                color: AppColors.jclWhite,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Text(
+                              ' *',
+                              style: TextStyle(
+                                color: AppColors.jclOrange,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         const Text(
-                          'Account Type',
+                          'Select your professional role:',
                           style: TextStyle(
                             color: AppColors.jclWhite,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
                           ),
                         ),
                         const SizedBox(height: 12),
-                        RadioListTile<String>(
-                          title: const Text(
-                            'Healthcare Provider (Anesthesia)',
-                            style: TextStyle(color: AppColors.jclWhite, fontSize: 13),
-                          ),
-                          value: AppConstants.siloAnes,
-                          groupValue: _selectedSilo,
-                          activeColor: AppColors.jclOrange,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedSilo = value!;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        RadioListTile<String>(
-                          title: const Text(
-                            'Job Provider',
-                            style: TextStyle(color: AppColors.jclWhite, fontSize: 13),
-                          ),
-                          value: AppConstants.siloJobs,
-                          groupValue: _selectedSilo,
-                          activeColor: AppColors.jclOrange,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedSilo = value!;
-                            });
-                          },
-                          contentPadding: EdgeInsets.zero,
-                        ),
+                        ...UserRoles.availableRoles.map((role) {
+                          return RadioListTile<String>(
+                            title: Text(
+                              role,
+                              style: const TextStyle(
+                                color: AppColors.jclWhite,
+                                fontSize: 13,
+                              ),
+                            ),
+                            value: role,
+                            groupValue: _selectedRole,
+                            activeColor: AppColors.jclOrange,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedRole = value!;
+                              });
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          );
+                        }).toList(),
                       ],
                     ),
                   ),

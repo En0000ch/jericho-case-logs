@@ -3,9 +3,13 @@ import 'package:flutter/services.dart';
 import 'app_colors.dart';
 
 class AppTheme {
+  // Font family used throughout the app
+  static const String fontFamily = 'Century Gothic';
+
   // iOS-style theme matching the original app design
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
+    fontFamily: fontFamily,
     scaffoldBackgroundColor: AppColors.jclGray,
     colorScheme: const ColorScheme.light(
       primary: AppColors.jclOrange,
@@ -29,6 +33,7 @@ class AppTheme {
         color: AppColors.jclOrange,
         fontSize: 20,
         fontWeight: FontWeight.w600,
+        fontFamily: fontFamily,
       ),
     ),
 
@@ -41,52 +46,61 @@ class AppTheme {
       elevation: 0,
     ),
 
-    // Text theme - iOS style
+    // Text theme - iOS style with Century Gothic font
     textTheme: const TextTheme(
       // Headers
       headlineLarge: TextStyle(
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
       headlineMedium: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.w600,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
       headlineSmall: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
       // Body text
       bodyLarge: TextStyle(
         fontSize: 16,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
       bodyMedium: TextStyle(
         fontSize: 14,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
       bodySmall: TextStyle(
         fontSize: 12,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
       // Labels
       labelLarge: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
       labelMedium: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
       labelSmall: TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w500,
         color: AppColors.jclWhite,
+        fontFamily: fontFamily,
       ),
     ),
 
@@ -104,6 +118,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
+          fontFamily: fontFamily,
         ),
       ),
     ),
@@ -114,6 +129,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
+          fontFamily: fontFamily,
         ),
       ),
     ),
@@ -146,10 +162,12 @@ class AppTheme {
       hintStyle: const TextStyle(
         color: AppColors.textSecondary,
         fontSize: 14,
+        fontFamily: fontFamily,
       ),
       labelStyle: const TextStyle(
         color: AppColors.textSecondary,
         fontSize: 14,
+        fontFamily: fontFamily,
       ),
     ),
 
@@ -206,10 +224,12 @@ class AppTheme {
         color: AppColors.jclGray,
         fontSize: 18,
         fontWeight: FontWeight.w600,
+        fontFamily: fontFamily,
       ),
       contentTextStyle: const TextStyle(
         color: AppColors.jclGray,
         fontSize: 14,
+        fontFamily: fontFamily,
       ),
     ),
 

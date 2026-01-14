@@ -1,22 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import '../../../core/themes/app_colors.dart';
+import '../../providers/auth_provider.dart';
+import '../../../core/utils/silo_resolver.dart';
+import '../../../data/datasources/remote/job_reconciliation_service.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 
 /// Job Search Screen - Flutter equivalent of jobSearchTableVController
-/// Allows searching for anesthesia jobs with profession, type, and location filters
-class JobSearchScreen extends StatefulWidget {
+/// Allows searching for silo-specific jobs with profession, type, and location filters
+class JobSearchScreen extends ConsumerStatefulWidget {
   const JobSearchScreen({super.key});
 
   @override
-  State<JobSearchScreen> createState() => _JobSearchScreenState();
+  ConsumerState<JobSearchScreen> createState() => _JobSearchScreenState();
 }
 
-class _JobSearchScreenState extends State<JobSearchScreen> {
+class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final JobReconciliationService _jobService = JobReconciliationService();
   List<Map<String, dynamic>> _allJobs = [];
   List<Map<String, dynamic>> _filteredJobs = [];
   bool _isLoading = false;
   bool _showFilterOverlay = false;
+  String? _userSilo;
 
   // Filter selections
   String? _selectedProfession;
@@ -43,7 +51,18 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
   void initState() {
     super.initState();
     _searchController.addListener(_filterJobs);
-    _loadJobs();
+    _initializeUserSilo();
+  }
+
+  /// Initialize user's silo and load jobs
+  Future<void> _initializeUserSilo() async {
+    final user = ref.read(currentUserProvider);
+    if (user != null) {
+      _userSilo = await SiloResolver.resolveEffectiveSilo(user);
+      if (mounted) {
+        _loadJobs();
+      }
+    }
   }
 
   @override
@@ -55,56 +74,75 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
   Future<void> _loadJobs() async {
     setState(() => _isLoading = true);
     try {
-      final query = QueryBuilder<ParseObject>(ParseObject('jclJobs'));
+      // Fetch unified jobs from both jclJobs and JobPosting classes
+      // CRITICAL: Filter by user's silo first
+      // This ensures anesthesia users only see anesthesia jobs, nurses only see nurse jobs
+      final unifiedJobs = await _jobService.fetchUnifiedJobs(
+        siloFilter: _userSilo,
+        limit: 100,
+      );
 
-      // Apply filters if any
+      // Apply additional client-side filters
+      var filteredJobs = unifiedJobs;
+
       if (_selectedProfession != null && _selectedProfession != 'All Professions') {
-        query.whereEqualTo('jclProf', _selectedProfession);
+        filteredJobs = filteredJobs.where((job) {
+          final jclProf = job['jclProf'] as String? ?? '';
+          return jclProf == _selectedProfession;
+        }).toList();
       }
+
       if (_selectedType != null && _selectedType != 'All Types') {
         final type = _selectedType == 'Both/Either' ? 'Both' : _selectedType;
-        query.whereEqualTo('jTypeString', type);
+        filteredJobs = filteredJobs.where((job) {
+          final jobType = job['jTypeString'] as String? ?? '';
+          return jobType == type || jobType.toLowerCase() == (type?.toLowerCase() ?? '');
+        }).toList();
       }
+
       if (_selectedState != null && _selectedState != 'All Locations') {
-        query.whereEqualTo('jobState', _selectedState);
+        filteredJobs = filteredJobs.where((job) {
+          final jobState = job['jobState'] as String? ?? '';
+          return jobState == _selectedState;
+        }).toList();
       }
 
-      final response = await query.query();
+      // Normalize job data to ensure all expected fields exist
+      // IMPORTANT: Use pre-extracted data from reconciliation service first!
+      final normalizedJobs = filteredJobs.map((job) {
+        final originalObject = job['originalObject'] as ParseObject?;
+        return {
+          'jclProf': job['jclProf'] ?? originalObject?.get<String>('jclProf') ?? '',
+          'jobTitle': job['jobTitle'] ?? '',
+          'reqNum': job['requisitionNumber'] ?? originalObject?.get<String>('reqNum') ?? '',
+          'assignmntDates': job['assignmntDates'] ?? originalObject?.get<String>('assignmntDates') ?? '',
+          'jobCity': job['jobCity'] ?? '',
+          'jobState': job['jobState'] ?? '',
+          'facName': job['facilityName'] ?? originalObject?.get<String>('facName') ?? '',
+          'facContactName': originalObject?.get<String>('facContactName') ?? '',
+          'facContactPhone': originalObject?.get<String>('facContactPhone') ?? '',
+          'facContactEmail': originalObject?.get<String>('facContactEmail') ?? '',
+          'jTypeString': job['jTypeString'] ?? job['jobType'] ?? '',
+          'jStatusString': originalObject?.get<String>('jStatusString') ?? 'Active',
+          'durationString': job['durationString'] ?? originalObject?.get<String>('durationString') ?? '',
+          'jobDescText': job['jobDescText'] ?? job['jobDescription'] ?? '',
+          'clientID': originalObject?.get<String>('clientID') ?? '',
+          'clientName': originalObject?.get<String>('clientName') ?? '',
+          'clientEmail': originalObject?.get<String>('clientEmail') ?? '',
+          'contactEmail': job['contactEmail'] ?? '',
+          'startDate': originalObject?.get<DateTime>('startDate'),
+          'endDate': originalObject?.get<DateTime>('endDate'),
+          'emBOOL': job['emBOOL'] ?? originalObject?.get<bool>('emBOOL') ?? false,
+          'hideFacility': job['hideFacility'] ?? originalObject?.get<bool>('hideFacility') ?? false,
+          'source': job['source'] ?? 'unknown', // Track whether job is from app or website
+          'originalObject': originalObject, // Keep reference to original Parse object
+        };
+      }).toList();
 
-      if (response.success && response.results != null) {
-        final jobs = <Map<String, dynamic>>[];
-
-        for (var obj in response.results!) {
-          final jobObj = obj as ParseObject;
-          jobs.add({
-            'jclProf': jobObj.get<String>('jclProf') ?? '',
-            'jobTitle': jobObj.get<String>('jobTitle') ?? '',
-            'reqNum': jobObj.get<String>('reqNum') ?? '',
-            'assignmntDates': jobObj.get<String>('assignmntDates') ?? '',
-            'jobCity': jobObj.get<String>('jobCity') ?? '',
-            'jobState': jobObj.get<String>('jobState') ?? '',
-            'facName': jobObj.get<String>('facName') ?? '',
-            'facContactName': jobObj.get<String>('facContactName') ?? '',
-            'facContactPhone': jobObj.get<String>('facContactPhone') ?? '',
-            'facContactEmail': jobObj.get<String>('facContactEmail') ?? '',
-            'jTypeString': jobObj.get<String>('jTypeString') ?? '',
-            'jStatusString': jobObj.get<String>('jStatusString') ?? '',
-            'durationString': jobObj.get<String>('durationString') ?? '',
-            'jobDescText': jobObj.get<String>('jobDescText') ?? '',
-            'clientID': jobObj.get<String>('clientID') ?? '',
-            'clientName': jobObj.get<String>('clientName') ?? '',
-            'clientEmail': jobObj.get<String>('clientEmail') ?? '',
-            'startDate': jobObj.get<DateTime>('startDate'),
-            'endDate': jobObj.get<DateTime>('endDate'),
-            'emBOOL': jobObj.get<bool>('emBOOL') ?? false,
-          });
-        }
-
-        setState(() {
-          _allJobs = jobs;
-          _filteredJobs = jobs;
-        });
-      }
+      setState(() {
+        _allJobs = normalizedJobs;
+        _filteredJobs = normalizedJobs;
+      });
     } catch (e) {
       debugPrint('Error loading jobs: $e');
     } finally {
@@ -164,6 +202,7 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
         backgroundColor: AppColors.jclOrange,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.jclWhite),
+        leading: const BackButton(),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: AppColors.jclWhite),
@@ -289,7 +328,7 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
                                           )
                                         : null,
                                     title: Text(
-                                      '${job['jobTitle']} - ${job['jTypeString']}',
+                                      '${job['jobTitle']} - ${_formatJobType(job['jTypeString'] as String? ?? '')}',
                                       style: const TextStyle(
                                         color: AppColors.jclGray,
                                         fontWeight: FontWeight.w600,
@@ -299,7 +338,7 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
                                     subtitle: Padding(
                                       padding: const EdgeInsets.only(top: 6),
                                       child: Text(
-                                        '${job['jobCity']}, ${job['jobState']} | ${job['assignmntDates']}',
+                                        '${_formatLocation(job)} | ${job['assignmntDates']}',
                                         style: TextStyle(
                                           color: AppColors.jclGray.withOpacity(0.85),
                                           fontSize: 14,
@@ -536,65 +575,131 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
   }
 
   void _showJobDetails(Map<String, dynamic> job) {
-    final bool isEmergent = job['emBOOL'] as bool? ?? false;
+    final originalObject = job['originalObject'] as ParseObject?;
+
+    // Debug: Print the job data
+    print('📋 Job Details Data:');
+    print('  - emBOOL: ${job['emBOOL']}');
+    print('  - assignmntDates: ${job['assignmntDates']}');
+    print('  - durationString: ${job['durationString']}');
+    print('  - contactEmail: ${job['contactEmail']}');
+    print('  - jTypeString: ${job['jTypeString']}');
+
+    // Check emergent status from both sources
+    bool isEmergent = job['emBOOL'] as bool? ?? false;
+    if (!isEmergent && originalObject != null) {
+      final emergentStatus = originalObject.get<String>('emergentStatus');
+      isEmergent = emergentStatus?.toLowerCase() == 'yes';
+    }
+    print('  - isEmergent: $isEmergent');
+
+    // Get dates and duration
+    String dates = job['assignmntDates'] as String? ?? '';
+    String duration = job['durationString'] as String? ?? '';
+
+    if (dates.isEmpty && originalObject != null) {
+      final startDate = originalObject.get<DateTime>('startDate');
+      if (startDate != null) {
+        dates = DateFormat('MM/dd/yyyy').format(startDate);
+      }
+      duration = originalObject.get<String>('jobDuration') ?? duration;
+    }
+
+    // Handle "Both" type to show as "Locum/Permanent"
+    String jobType = job['jTypeString'] as String? ?? '';
+    if (jobType.toLowerCase() == 'both') {
+      jobType = 'Locum/Permanent';
+    }
+
+    // Get hideFacility flag
+    final hideFacility = job['hideFacility'] as bool? ?? false;
+
+    // Get contact email - check pre-extracted field first
+    String contactEmail = job['contactEmail'] as String? ?? '';
+    print('  - contactEmail from job: $contactEmail');
+
+    // Fallback to originalObject if not pre-extracted
+    if (contactEmail.isEmpty && originalObject != null) {
+      contactEmail = originalObject.get<String>('facContactEmail') ??
+                     originalObject.get<String>('clientEmail') ?? '';
+      print('  - contactEmail from originalObject: $contactEmail');
+    }
+    print('  - Final contactEmail: $contactEmail');
+
+    // Get description
+    String description = job['jobDescText'] as String? ?? '';
+    if (description.isEmpty && originalObject != null) {
+      description = originalObject.get<String>('description') ?? '';
+    }
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(job['jobTitle']),
+        title: Text(job['jobTitle'] as String? ?? 'Job Details'),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailRow('Type', job['jTypeString']),
-              _buildDetailRow('Location', '${job['jobCity']}, ${job['jobState']}'),
-              _buildDetailRow('Dates', job['assignmntDates']),
-              // Emergent indicator
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 80,
-                      child: Text(
-                        'Emergent:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.jclOrange,
+              _buildDetailRow('Type', jobType),
+              _buildDetailRow('Location', _formatLocation(job)),
+              if (dates.isNotEmpty) _buildDetailRow('Start Date', dates),
+              if (duration.isNotEmpty) _buildDetailRow('Duration', duration),
+
+              // Emergent indicator - only show if emergent
+              if (isEmergent)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: Text(
+                          'Emergent:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.jclOrange,
+                          ),
                         ),
                       ),
-                    ),
-                    Image.asset(
-                      isEmergent
-                          ? 'assets/images/sirenOn.gif'
-                          : 'assets/images/sirenOff.png',
-                      width: 40,
-                      height: 40,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Text(isEmergent ? 'YES' : 'NO');
-                      },
-                    ),
-                  ],
+                      Image.asset(
+                        'assets/images/sirenOn.gif',
+                        width: 40,
+                        height: 40,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Text('YES', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold));
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              _buildDetailRow('Facility', job['facName']),
-              _buildDetailRow('Duration', job['durationString']),
-              _buildDetailRow('Status', job['jStatusString']),
-              if (job['jobDescText'].isNotEmpty) ...[
+
+              // Only show facility name if not hidden
+              if (!hideFacility && job['facilityName'] != null && (job['facilityName'] as String).isNotEmpty)
+                _buildDetailRow('Facility', job['facilityName']),
+              if (job['jStatusString'] != null && (job['jStatusString'] as String).isNotEmpty)
+                _buildDetailRow('Status', job['jStatusString']),
+
+              if (description.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 const Text(
                   'Description:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
-                Text(job['jobDescText']),
+                Text(description),
               ],
             ],
           ),
         ),
         actions: [
+          if (contactEmail.isNotEmpty)
+            TextButton.icon(
+              onPressed: () => _sendEmail(contactEmail, job['jobTitle'] as String? ?? 'Job'),
+              icon: const Icon(Icons.email, color: AppColors.jclOrange),
+              label: const Text('Contact Poster', style: TextStyle(color: AppColors.jclOrange)),
+            ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
@@ -602,6 +707,24 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _sendEmail(String email, String jobTitle) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+      query: 'subject=Inquiry about: $jobTitle',
+    );
+
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open email client for $email')),
+        );
+      }
+    }
   }
 
   Widget _buildDetailRow(String label, String value) {
@@ -621,5 +744,35 @@ class _JobSearchScreenState extends State<JobSearchScreen> {
         ],
       ),
     );
+  }
+
+  /// Format job type - convert "Both" to "Locum/Permanent"
+  String _formatJobType(String jobType) {
+    if (jobType.toLowerCase() == 'both') {
+      return 'Locum/Permanent';
+    }
+    return jobType;
+  }
+
+  /// Format location - honor hideFacility flag
+  String _formatLocation(Map<String, dynamic> job) {
+    final city = job['jobCity'] as String? ?? '';
+    final state = job['jobState'] as String? ?? '';
+    final hideFacility = job['hideFacility'] as bool? ?? false;
+
+    // If hideFacility is true, only show state
+    if (hideFacility) {
+      return state;
+    }
+
+    // Otherwise show "City, State"
+    if (city.isNotEmpty && state.isNotEmpty) {
+      return '$city, $state';
+    } else if (state.isNotEmpty) {
+      return state;
+    } else if (city.isNotEmpty) {
+      return city;
+    }
+    return '';
   }
 }

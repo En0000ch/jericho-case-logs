@@ -10,6 +10,7 @@ class GlowButton extends StatefulWidget {
   final bool isPrimary;
   final bool isFullWidth;
   final IconData? icon;
+  final double? fontSize;
 
   const GlowButton({
     super.key,
@@ -18,6 +19,7 @@ class GlowButton extends StatefulWidget {
     this.isPrimary = true,
     this.isFullWidth = true,
     this.icon,
+    this.fontSize,
   });
 
   @override
@@ -80,7 +82,7 @@ class _GlowButtonState extends State<GlowButton>
           return Container(
             width: widget.isFullWidth ? double.infinity : null,
             padding: widget.isFullWidth
-                ? const EdgeInsets.symmetric(vertical: 15)
+                ? const EdgeInsets.symmetric(vertical: 15, horizontal: 12)
                 : const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
             decoration: BoxDecoration(
               color: widget.isPrimary
@@ -140,14 +142,19 @@ class _GlowButtonState extends State<GlowButton>
                   ),
                   const SizedBox(width: 10),
                 ],
-                Text(
-                  widget.text,
-                  style: TextStyle(
-                    color: widget.isPrimary
-                        ? AppColors.jclWhite
-                        : AppColors.jclOrange,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    widget.text,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
+                    style: TextStyle(
+                      color: widget.isPrimary
+                          ? AppColors.jclWhite
+                          : AppColors.jclOrange,
+                      fontSize: widget.fontSize ?? 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],

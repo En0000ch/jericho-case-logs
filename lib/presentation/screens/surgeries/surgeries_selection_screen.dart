@@ -47,6 +47,7 @@ class _SurgeriesSelectionScreenState
         backgroundColor: AppColors.jclOrange,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.jclWhite),
+        leading: const BackButton(),
       ),
       body: surgeryState.isLoading
           ? const Center(

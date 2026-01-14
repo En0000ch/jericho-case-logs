@@ -32,7 +32,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // Add listeners to save data when text changes
     _firstNameController.addListener(_saveUserDataDebounced);
     _lastNameController.addListener(_saveUserDataDebounced);
-    _titleController.addListener(_saveUserDataDebounced);
+    // Title controller no longer needs listener - it's read-only showing jclRole
 
     // Load data asynchronously
     _loadUserData();
@@ -45,12 +45,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // Load from SharedPreferences first, fall back to user object
     final firstName = prefs.getString('jclFirstName') ?? user?.firstName ?? '';
     final lastName = prefs.getString('jclLastName') ?? user?.lastName ?? '';
-    final title = prefs.getString('jclUserTitle') ?? user?.title ?? '';
+    // Title field now shows jclRole from user object (read-only)
+    final role = user?.jclRole ?? 'CRNA'; // Default to CRNA if no role
 
     // Update controller text
     _firstNameController.text = firstName;
     _lastNameController.text = lastName;
-    _titleController.text = title;
+    _titleController.text = role;
   }
 
   void _saveUserDataDebounced() {
@@ -292,26 +293,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         const SizedBox(height: 8),
 
-                        // Title Field
+                        // Title Field (Read-only - shows user's jclRole)
                         SizedBox(
                           height: 34,
                           child: TextField(
                             controller: _titleController,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            textCapitalization: TextCapitalization.characters,
+                            readOnly: true,
+                            enabled: false,
                             style: const TextStyle(
                               color: AppColors.jclGray,
                               fontSize: 14,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'Title',
+                              hintText: 'Title (Role)',
                               hintStyle: TextStyle(
                                 color: AppColors.jclGray.withAlpha(128),
                                 fontSize: 14,
                               ),
                               filled: true,
-                              fillColor: AppColors.jclWhite,
+                              fillColor: AppColors.jclWhite.withOpacity(0.7),
+                              disabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(4),
+                                borderSide: BorderSide(
+                                  color: AppColors.jclGray.withAlpha(64),
+                                  width: 1,
+                                ),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(4),
                                 borderSide: BorderSide.none,
@@ -405,18 +412,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 33),
-
-                // Generate Report Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 65),
-                  child: _buildActionRow(
-                    context,
-                    label: 'Generate Report',
-                    onPressed: _generateReport,
-                  ),
-                ),
-
                 const SizedBox(height: 100),
               ],
             ),
@@ -432,9 +427,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     FocusScope.of(context).unfocus();
 
     // Validate that all required fields are filled
+    // Title is auto-populated from jclRole, so just check first/last name
     if (_firstNameController.text.trim().isEmpty ||
-        _lastNameController.text.trim().isEmpty ||
-        _titleController.text.trim().isEmpty) {
+        _lastNameController.text.trim().isEmpty) {
       _showNameRequiredAlert();
       return;
     }
@@ -453,12 +448,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _saveUserData() async {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
-    final title = _titleController.text.trim();
+    // Title is now read-only (shows jclRole), so we don't save it
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jclFirstName', firstName);
     await prefs.setString('jclLastName', lastName);
-    await prefs.setString('jclUserTitle', title);
+    // No longer saving jclUserTitle - it comes from user.jclRole
   }
 
   void _showNameRequiredAlert() {
@@ -467,7 +462,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Missing Information'),
         content: const Text(
-            'In order to use this feature, your full name & title are required.'),
+            'In order to use this feature, your full name is required.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -517,8 +512,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await authNotifier.logout();
 
     if (mounted) {
-      // Navigate to login screen
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      // Pop all routes to return to root, AuthRouter will show LoginScreen
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 

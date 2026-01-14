@@ -15,6 +15,7 @@ abstract class IAuthRepository {
     required String email,
     required String password,
     required String silo,
+    String? role,
     String? firstName,
     String? lastName,
     String? title,

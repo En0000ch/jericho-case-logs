@@ -52,6 +52,7 @@ class _GenerateReportScreenState extends ConsumerState<GenerateReportScreen> {
         backgroundColor: AppColors.jclOrange,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.jclWhite),
+        leading: const BackButton(),
         actions: [
           PopupMenuButton<String>(
             icon: Image.asset(

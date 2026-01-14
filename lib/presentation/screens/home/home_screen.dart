@@ -17,6 +17,7 @@ import '../cases/case_edit_screen.dart';
 import '../calendar/calendar_screen.dart';
 import '../settings/settings_screen.dart';
 import '../job_search/job_search_screen.dart';
+import '../reports/generate_report_screen.dart';
 import '../../widgets/marquee_text.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -1109,8 +1110,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Reports button on far left
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => GenerateReportScreen(),
+                      ),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: AppColors.jclGray,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/images/report-30.png',
+                        width: 28,
+                        height: 28,
+                        color: AppColors.jclGray,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.assessment,
+                            size: 28,
+                            color: AppColors.jclGray,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Reports',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.jclGray,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Jobs button on far right
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).push(

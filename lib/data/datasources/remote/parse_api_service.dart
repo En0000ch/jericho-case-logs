@@ -34,6 +34,7 @@ class ParseApiService {
     required String email,
     required String password,
     required String silo,
+    String? role,
     String? firstName,
     String? lastName,
     String? title,
@@ -45,6 +46,7 @@ class ParseApiService {
     user.set('lastName', lastName);
     user.set('title', title);
     user.set('jclSilo', silo);
+    user.set('jclRole', role);
     user.set('hasPurchased', false);
     user.set('caseCount', 0);
 

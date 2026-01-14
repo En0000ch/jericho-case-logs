@@ -70,7 +70,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final allCases = caseListState.cases;
 
     // Update selected events when case list changes
-    ref.listen(caseListProvider(user.email), (previous, next) {
+    ref.listen<CaseListState>(caseListProvider(user.email), (CaseListState? previous, CaseListState next) {
       if (_selectedDay != null) {
         _selectedEvents.value = _getEventsForDay(_selectedDay!, next.cases);
       }
