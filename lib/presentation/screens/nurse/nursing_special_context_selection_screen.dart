@@ -214,6 +214,10 @@ class _NursingSpecialContextSelectionScreenState
             color: AppColors.jclGray.withOpacity(0.05),
             child: TextField(
               controller: _searchController,
+              style: const TextStyle(
+                color: AppColors.jclGray,
+                fontSize: 16,
+              ),
               decoration: InputDecoration(
                 hintText: 'Search special contexts...',
                 prefixIcon: const Icon(Icons.search, color: AppColors.jclGray),

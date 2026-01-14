@@ -102,6 +102,204 @@ class _PatientCreationScreenState extends ConsumerState<PatientCreationScreen> {
     print('Confetti animation completed');
   }
 
+  Future<String?> _showAcuityDialog() async {
+    String? selectedAcuity = _selectedAcuity;
+
+    return await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: AppColors.jclWhite,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 600, maxWidth: 400),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        color: AppColors.jclOrange,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Select Acuity Level',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    // Info header
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      color: AppColors.jclOrange.withOpacity(0.1),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: AppColors.jclOrange,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Reflects patient complexity and intensity of nursing intervention',
+                              style: TextStyle(
+                                color: AppColors.jclGray.withOpacity(0.8),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Acuity levels list
+                    Expanded(
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(12),
+                        itemCount: NursingAcuityData.acuityLevels.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final acuity = NursingAcuityData.acuityLevels[index];
+                          final level = acuity['level']!;
+                          final classification = acuity['classification']!;
+                          final isSelected = selectedAcuity == level;
+
+                          return InkWell(
+                            onTap: () {
+                              setState(() {
+                                selectedAcuity = level;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.jclOrange
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.jclOrange
+                                      : AppColors.jclGray.withOpacity(0.3),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isSelected
+                                        ? Icons.radio_button_checked
+                                        : Icons.radio_button_unchecked,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppColors.jclGray.withOpacity(0.5),
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Level $level',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : AppColors.jclOrange,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          classification,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : AppColors.jclGray,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    // Action buttons
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          top: BorderSide(color: AppColors.jclGray.withOpacity(0.2), width: 1),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: AppColors.jclGray,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(selectedAcuity);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.jclOrange,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Confirm',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -648,14 +846,7 @@ class _PatientCreationScreenState extends ConsumerState<PatientCreationScreen> {
                   width: double.infinity,
                   child: OrangeOutlineButton(
                     onPressed: () async {
-                      final result =
-                          await Navigator.of(context).push<String>(
-                        MaterialPageRoute(
-                          builder: (_) => NursingAcuitySelectionScreen(
-                            initiallySelectedAcuity: _selectedAcuity,
-                          ),
-                        ),
-                      );
+                      final result = await _showAcuityDialog();
 
                       if (result != null) {
                         setState(() {

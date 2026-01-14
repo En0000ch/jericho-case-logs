@@ -3186,42 +3186,61 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
 
   /// iOS saveRecord: + triggerSnowfall equivalent
   Future<void> _saveWithConfetti() async {
-    // Show confetti animation
-    setState(() => _showConfetti = true);
-    print('DEBUG: Confetti started');
+    bool saveSuccess = false;
 
-    // Wait for confetti to start, then save
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      // Show confetti animation
+      setState(() => _showConfetti = true);
+      print('DEBUG: Confetti started');
 
-    // Save the case and wait for it to complete
-    print('DEBUG: Starting database save...');
-    await widget.onSave({
-      'date': widget.initialDate,
-      'location': _locationController.text,
-      'surgeon': _surgeonController.text,
-      'surgery': _surgeryController.text,
-      'primaryAnesthetic': _primaryAnestheticController.text,
-      'secondaryAnesthetic': _secondaryAnestheticController.text.trim().isEmpty
-          ? 'n/a'
-          : _secondaryAnestheticController.text,
-      'age': _ageController.text, // Keep as string to match Parse schema
-      'gender': _gender,
-      'asaClassification': _asaClassification,
-      'asaEmergency': _asaEmergency,
-      'patientNotes': _patientNotes,
-      'complications': _selectedComplications.join(', '),
-      'comorbidities': _selectedComorbidities.join(', '),
-      'skilledProcedures': _selectedSkilledProcedures.join(', '),
-      'airwayManagement': null,
-    });
+      // Wait for confetti to start, then save
+      await Future.delayed(const Duration(milliseconds: 500));
 
-    print('DEBUG: Database save completed successfully');
-    // Database save completed successfully - wait 5 seconds before returning to homescreen
-    print('DEBUG: Waiting 5 seconds before returning to homescreen...');
-    await Future.delayed(const Duration(seconds: 5));
-    print('DEBUG: 5 seconds elapsed, navigating back to homescreen');
-    if (mounted) {
-      Navigator.pop(context, true);
+      // Save the case and wait for it to complete
+      print('DEBUG: Starting database save...');
+      await widget.onSave({
+        'date': widget.initialDate,
+        'location': _locationController.text,
+        'surgeon': _surgeonController.text,
+        'surgery': _surgeryController.text,
+        'primaryAnesthetic': _primaryAnestheticController.text,
+        'secondaryAnesthetic': _secondaryAnestheticController.text.trim().isEmpty
+            ? 'n/a'
+            : _secondaryAnestheticController.text,
+        'age': _ageController.text, // Keep as string to match Parse schema
+        'gender': _gender,
+        'asaClassification': _asaClassification,
+        'asaEmergency': _asaEmergency,
+        'patientNotes': _patientNotes,
+        'complications': _selectedComplications.join(', '),
+        'comorbidities': _selectedComorbidities.join(', '),
+        'skilledProcedures': _selectedSkilledProcedures.join(', '),
+        'airwayManagement': null,
+      });
+
+      print('DEBUG: Database save completed successfully');
+      saveSuccess = true;
+
+      // Wait 3 seconds before returning to homescreen
+      print('DEBUG: Waiting 3 seconds before returning to homescreen...');
+      await Future.delayed(const Duration(seconds: 3));
+    } catch (e) {
+      print('ERROR: Failed to save case: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving case: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      // Always navigate back, even if save failed
+      print('DEBUG: Navigating back to homescreen');
+      if (mounted) {
+        Navigator.pop(context, saveSuccess);
+      }
     }
   }
 
@@ -3521,6 +3540,7 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                         onPressed: _showNotesDialog,
                         isPrimary: true,
                         isFullWidth: true,
+                        fontSize: 14,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -3532,6 +3552,7 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                         onPressed: _showComplicationsDialog,
                         isPrimary: true,
                         isFullWidth: true,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -3549,6 +3570,7 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                         onPressed: _showComorbiditiesDialog,
                         isPrimary: true,
                         isFullWidth: true,
+                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -3565,7 +3587,7 @@ class _LogCaseViewScreenState extends State<_LogCaseViewScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 60),
+                const SizedBox(height: 15),
 
                 // Slide to Save Label
                 const Text(

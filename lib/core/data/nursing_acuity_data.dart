@@ -43,6 +43,14 @@ class NursingAcuityData {
       'examples':
           'Active codes, ECMO, massive transfusion protocols, post-ROSC management',
     },
+    {
+      'level': 'N/A',
+      'classification': 'Not Applicable',
+      'clinicalDescription':
+          'Acuity classification does not apply to this patient scenario.',
+      'examples':
+          'Community health visits, administrative tasks, educational encounters',
+    },
   ];
 
   /// Get acuity level by level number
@@ -58,6 +66,7 @@ class NursingAcuityData {
   static String getDisplayText(String level) {
     final acuity = getAcuityByLevel(level);
     if (acuity == null) return 'Not specified';
+    if (level == 'N/A') return 'Not Applicable';
     return 'Level ${acuity['level']}: ${acuity['classification']}';
   }
 }

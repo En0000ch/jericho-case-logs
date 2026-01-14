@@ -112,8 +112,11 @@ class _NurseHomeScreenState extends ConsumerState<NurseHomeScreen>
     Future.delayed(const Duration(seconds: 5), () {
       if (!mounted) return;
 
+      // Only show modal if this screen is currently visible (is the active route)
+      final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? false;
+
       final timerState = _patientTimer?.currentState;
-      if (timerState?.shouldShowModal == true && !_timerDialogShown) {
+      if (isCurrentRoute && timerState?.shouldShowModal == true && !_timerDialogShown) {
         _showPatientCarryForwardDialog();
       }
 
