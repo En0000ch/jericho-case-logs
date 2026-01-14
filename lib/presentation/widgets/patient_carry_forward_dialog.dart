@@ -187,6 +187,7 @@ class _PatientCarryForwardDialogState extends State<PatientCarryForwardDialog> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       elevation: 1,
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
